@@ -1,0 +1,25 @@
+{
+  "name": "@rewynd/example-express-postgres",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Demo + integration fixture for rewynd: Express + Postgres with two planted bugs (N+1 and a contextual 500).",
+  "scripts": {
+    "dev": "tsx src/server.ts",
+    "start": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "pg": "^8.13.1",
+    "pino": "^9.5.0"
+  },
+  "devDependencies": {
+    "@rewynd/shim": "workspace:*",
+    "@types/express": "^4.17.21",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "embedded-postgres": "18.4.0-beta.17",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

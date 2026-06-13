@@ -1,0 +1,26 @@
+# Go
+/core/rewynd
+/core/dist/
+*.test
+
+# Node
+node_modules/
+dist/
+*.tsbuildinfo
+.pnpm-store/
+
+# rewynd local data / runtime
+*.sqlite
+*.sqlite-wal
+*.sqlite-shm
+.rewynd/
+*.sock
+
+# embedded postgres data dir (example app fallback)
+.pgdata/
+
+# OS / editor
+.DS_Store
+*.log
+.idea/
+.vscode/
