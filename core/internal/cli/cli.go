@@ -39,6 +39,9 @@ func newRoot(version string) *cobra.Command {
 		statusCmd(),
 		lsCmd(),
 		showCmd(),
+		diagnoseCmd(),
+		lastErrorCmd(),
+		tailCmd(),
 		clearCmd(),
 		watchCmd(),
 	)
@@ -218,6 +221,170 @@ func watchCmd() *cobra.Command {
 	return cmd
 }
 
+func diagnoseCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "diagnose <id>",
+		Short: "Summarize what's wrong with a request (for humans and agents)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			asJSON, _ := cmd.Flags().GetBool("json")
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			req, err := st.GetRequest(args[0])
+			if err != nil {
+				return err
+			}
+			problems := diagnose(req)
+			if asJSON {
+				return printJSON(map[string]any{
+					"request_id": req.ID, "status_code": req.StatusCode, "problems": problems,
+				})
+			}
+			fmt.Printf("%s %s  ->  %d  (%s)\n", req.Method, req.Path, req.StatusCode, dur(req.DurationMs))
+			if len(problems) == 0 {
+				fmt.Println("no problems detected")
+				return nil
+			}
+			fmt.Println("problems:")
+			for _, p := range problems {
+				fmt.Printf("  • %s\n", p.Summary)
+				if p.Suggestion != "" {
+					fmt.Printf("    ↳ %s\n", p.Suggestion)
+				}
+			}
+			return nil
+		},
+	}
+	cmd.Flags().Bool("json", false, "machine-readable output")
+	return cmd
+}
+
+func lastErrorCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "last-error",
+		Short: "Show the most recent 5xx in full",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			asJSON, _ := cmd.Flags().GetBool("json")
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			reqs, err := st.ListRequests(store.ListOptions{StatusClass: "5xx", Limit: 1})
+			if err != nil {
+				return err
+			}
+			if len(reqs) == 0 {
+				return fmt.Errorf("no 5xx requests recorded")
+			}
+			full, err := st.GetRequest(reqs[0].ID)
+			if err != nil {
+				return err
+			}
+			if asJSON {
+				return printJSON(full)
+			}
+			printRequestDetail(full)
+			return nil
+		},
+	}
+	cmd.Flags().Bool("json", false, "machine-readable output")
+	return cmd
+}
+
+func tailCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "tail",
+		Short: "Stream requests as they arrive (non-blocking monitor)",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			opts := listOptsFromFlags(cmd)
+			opts.Limit = 50
+			asJSON, _ := cmd.Flags().GetBool("json")
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+
+			seen := map[string]bool{}
+			if existing, _ := st.ListRequests(opts); existing != nil {
+				for _, r := range existing {
+					seen[r.ID] = true
+				}
+			}
+			for {
+				select {
+				case <-ctx.Done():
+					return nil
+				default:
+				}
+				reqs, _ := st.ListRequests(opts)
+				for i := len(reqs) - 1; i >= 0; i-- { // oldest-first among the page
+					r := reqs[i]
+					if seen[r.ID] {
+						continue
+					}
+					seen[r.ID] = true
+					if asJSON {
+						printJSONLine(r)
+					} else {
+						fmt.Printf("%s  %-6s %-26s %d  %7s  %s\n",
+							shortID(r.ID), r.Method, r.Path, r.StatusCode, dur(r.DurationMs), flags(r))
+					}
+				}
+				time.Sleep(200 * time.Millisecond)
+			}
+		},
+	}
+	addListFlags(cmd)
+	cmd.Flags().Bool("json", false, "machine-readable output")
+	return cmd
+}
+
+type problem struct {
+	Type       string `json:"type"`
+	Summary    string `json:"summary"`
+	Suggestion string `json:"suggestion,omitempty"`
+}
+
+func diagnose(r *model.Request) []problem {
+	var ps []problem
+	for _, d := range r.Detections {
+		s := d.Summary
+		if s == "" {
+			s = d.Title
+		}
+		ps = append(ps, problem{string(d.Type), s, d.Suggestion})
+	}
+	seenExc := map[string]bool{}
+	for _, e := range r.Exceptions {
+		key := e.Type + e.Message
+		if seenExc[key] {
+			continue
+		}
+		seenExc[key] = true
+		ps = append(ps, problem{"exception", strings.TrimSpace(e.Type + ": " + oneLine(e.Message)), firstLine(e.Stack)})
+	}
+	for _, q := range r.Queries {
+		if q.DurationMs >= 100 {
+			ps = append(ps, problem{"slow_query", fmt.Sprintf("slow query (%s): %s", dur(q.DurationMs), oneLine(q.Statement)), ""})
+		}
+	}
+	return ps
+}
+
+func firstLine(s string) string {
+	if i := strings.IndexByte(s, '\n'); i >= 0 {
+		return strings.TrimSpace(s[:i])
+	}
+	return strings.TrimSpace(s)
+}
+
 func addListFlags(cmd *cobra.Command) {
 	cmd.Flags().String("status", "", "filter by class: 2xx|4xx|5xx")
 	cmd.Flags().Bool("slow", false, "only slow requests")
@@ -260,6 +427,12 @@ func printJSON(v any) error {
 	enc := json.NewEncoder(os.Stdout)
 	enc.SetIndent("", "  ")
 	return enc.Encode(v)
+}
+
+func printJSONLine(v any) {
+	if b, err := json.Marshal(v); err == nil {
+		os.Stdout.Write(append(b, '\n'))
+	}
 }
 
 func printRequestTable(reqs []model.Request) {
