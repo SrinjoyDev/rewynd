@@ -1,14 +1,3 @@
 packages:
   - "packages/*"
   - "examples/*"
-
-allowBuilds:
-  '@embedded-postgres/linux-x64': set this to true or false
-  esbuild: set this to true or false
-  protobufjs: set this to true or false
-
-# Allow these dependencies to run install/build scripts (pnpm blocks them by default).
-# @embedded-postgres/linux-x64 extracts the real Postgres binary; esbuild powers tsx.
-onlyBuiltDependencies:
-  - "@embedded-postgres/linux-x64"
-  - esbuild
