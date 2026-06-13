@@ -18,6 +18,8 @@ import (
 
 	"github.com/rewyndhq/rewynd/internal/config"
 	"github.com/rewyndhq/rewynd/internal/daemon"
+	"github.com/rewyndhq/rewynd/internal/diag"
+	"github.com/rewyndhq/rewynd/internal/mcp"
 	"github.com/rewyndhq/rewynd/internal/model"
 	"github.com/rewyndhq/rewynd/internal/store"
 )
@@ -43,6 +45,7 @@ func newRoot(version string) *cobra.Command {
 		diagnoseCmd(),
 		lastErrorCmd(),
 		tailCmd(),
+		mcpCmd(version),
 		clearCmd(),
 		watchCmd(),
 	)
@@ -238,7 +241,7 @@ func diagnoseCmd() *cobra.Command {
 			if err != nil {
 				return err
 			}
-			problems := diagnose(req)
+			problems := diag.Diagnose(req)
 			if asJSON {
 				return printJSON(map[string]any{
 					"request_id": req.ID, "status_code": req.StatusCode, "problems": problems,
@@ -347,43 +350,21 @@ func tailCmd() *cobra.Command {
 	return cmd
 }
 
-type problem struct {
-	Type       string `json:"type"`
-	Summary    string `json:"summary"`
-	Suggestion string `json:"suggestion,omitempty"`
-}
-
-func diagnose(r *model.Request) []problem {
-	var ps []problem
-	for _, d := range r.Detections {
-		s := d.Summary
-		if s == "" {
-			s = d.Title
-		}
-		ps = append(ps, problem{string(d.Type), s, d.Suggestion})
+func mcpCmd(version string) *cobra.Command {
+	return &cobra.Command{
+		Use:   "mcp",
+		Short: "Run the MCP server (stdio) so coding agents can introspect the backend",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
+			defer stop()
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			return mcp.RunStdio(ctx, st, version)
+		},
 	}
-	seenExc := map[string]bool{}
-	for _, e := range r.Exceptions {
-		key := e.Type + e.Message
-		if seenExc[key] {
-			continue
-		}
-		seenExc[key] = true
-		ps = append(ps, problem{"exception", strings.TrimSpace(e.Type + ": " + oneLine(e.Message)), firstLine(e.Stack)})
-	}
-	for _, q := range r.Queries {
-		if q.DurationMs >= 100 {
-			ps = append(ps, problem{"slow_query", fmt.Sprintf("slow query (%s): %s", dur(q.DurationMs), oneLine(q.Statement)), ""})
-		}
-	}
-	return ps
-}
-
-func firstLine(s string) string {
-	if i := strings.IndexByte(s, '\n'); i >= 0 {
-		return strings.TrimSpace(s[:i])
-	}
-	return strings.TrimSpace(s)
 }
 
 func addListFlags(cmd *cobra.Command) {

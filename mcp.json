@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "rewynd": {
+      "command": "rewynd",
+      "args": ["mcp"]
+    }
+  }
+}

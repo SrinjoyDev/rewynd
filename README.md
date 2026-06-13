@@ -66,9 +66,21 @@ rewynd watch --status 5xx --timeout 10s --json # blocks until it lands, prints t
 rewynd diagnose <id>                           # "what's wrong here" in one line
 ```
 
-`watch` returns the failing SQL with its params, the exception and stack, the request payload,
-and any detected N+1 — as JSON the agent reads directly. An **MCP server** (`rewynd mcp`)
-exposing the same as native tools for Claude Code / Cursor is on the way.
+`watch` returns the failing SQL with its params, the exception and stack, and any detected
+N+1 — as JSON the agent reads directly.
+
+Or skip the CLI: rewynd ships an **MCP server** so agents introspect the backend natively.
+Drop this into your Claude Code / Cursor MCP config:
+
+```json
+{
+  "mcpServers": {
+    "rewynd": { "command": "rewynd", "args": ["mcp"] }
+  }
+}
+```
+
+Tools: `list_requests`, `get_request`, `wait_for_request`, `diagnose`, `get_last_error`, `clear`.
 
 ## What it captures, correlated per request
 
@@ -117,8 +129,8 @@ with the TUI, CLI, and MCP as thin clients over it.
 - [x] Zero-config capture + per-request correlation (Node, ESM/`tsx`)
 - [x] Go core: OTLP receiver, SQLite store, N+1 detection
 - [x] CLI + the agent `watch` loop, `rewynd run` launcher
+- [x] MCP server (`rewynd mcp`) + `mcp.json` quickstart
 - [ ] The beautiful TUI (live list + waterfall) — the hero
-- [ ] MCP server + `mcp.json` quickstart
 - [ ] Request/response body capture + redaction
 - [ ] More frameworks (Fastify, Nest, Next), ORMs (Prisma, Drizzle), Python
 
