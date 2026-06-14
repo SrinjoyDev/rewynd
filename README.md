@@ -13,6 +13,16 @@ HTTP request, database query, outbound call, log line, and exception during loca
 **correlates them per request**, and lets you — or your coding agent — see exactly what
 happened. No `console.log`, no re-running.
 
+<p align="center">
+  <img src="demo/tui.gif" alt="rewynd TUI — live requests with the N+1 waterfall" width="100%">
+</p>
+
+<p align="center"><sub>↑ the human view: click the broken request, see its whole story &nbsp;·&nbsp; ↓ the same recording, driven by your coding agent</sub></p>
+
+<p align="center">
+  <img src="demo/agent-loop.gif" alt="rewynd agent loop — clear, trigger, watch, diagnose" width="100%">
+</p>
+
 > Laravel Telescope, reborn for Node — terminal-native, and the first backend recorder your
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
