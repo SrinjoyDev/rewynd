@@ -1,0 +1,44 @@
+---
+description: Debug and verify backend runtime behavior (HTTP 500s, wrong responses, slow endpoints, suspected N+1 or duplicate queries) by reading the actual recorded request trace via rewynd, instead of guessing from source or adding print statements.
+globs:
+alwaysApply: false
+---
+
+# Debugging the backend with rewynd
+
+rewynd is a local flight recorder that has already recorded the HTTP requests this app served
+during development — and, correlated to each one, the exact SQL (with params), outbound calls,
+log lines, and exceptions it caused. When a backend endpoint is broken, slow, or behaving
+unexpectedly, **read the recording instead of speculating or adding `console.log`/`print`.**
+
+## The loop
+
+1. `rewynd clear` — wipe the buffer so the next request is unambiguous.
+2. Trigger the endpoint (curl it, run the test, or have the user click it).
+3. `rewynd watch --status 5xx --timeout 10s --json` — block until it lands, print the full trace.
+4. `rewynd diagnose <id>` — what's wrong, in one line (or read the JSON from `watch`).
+5. Fix the code, then repeat from step 1 to confirm the request is now green.
+
+## Commands
+
+```bash
+rewynd clear                 # clean slate before a test
+rewynd watch --json          # block until a matching request lands, print it (--status, --path, --timeout)
+rewynd ls --has-error --json # list failing requests (also --status 5xx, --slow, --path)
+rewynd show <id> --json      # one request's full correlated trace (SQL+params, outbound, logs, exception)
+rewynd diagnose <id>         # summarize what's wrong, with a fix suggestion
+rewynd last-error --json     # the most recent 5xx, in full
+```
+
+A request id prefix (first 8 chars) works anywhere an id is expected. If the rewynd MCP server
+is configured (`.cursor/mcp.json`), prefer its tools (`get_stats`, `wait_for_request`,
+`diagnose`, ...) — same data, native to the agent.
+
+## Rules
+
+- Trust `diagnose` and the N+1 / slow detections — they come from the real trace, not
+  inference. Empty `diagnose` means the request is clean; look elsewhere.
+- Always `clear` before triggering the request you want to inspect.
+- If nothing is recorded, start the app under rewynd: `rewynd run <dev command>` (Node) or
+  `rewynd-run <command>` (Python).
+- rewynd is local and read-only; `clear` only wipes rewynd's own buffer, never your data.
