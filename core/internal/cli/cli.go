@@ -21,6 +21,7 @@ import (
 	"github.com/SrinjoyDev/rewynd/core/internal/config"
 	"github.com/SrinjoyDev/rewynd/core/internal/daemon"
 	"github.com/SrinjoyDev/rewynd/core/internal/diag"
+	"github.com/SrinjoyDev/rewynd/core/internal/export"
 	"github.com/SrinjoyDev/rewynd/core/internal/mcp"
 	"github.com/SrinjoyDev/rewynd/core/internal/model"
 	"github.com/SrinjoyDev/rewynd/core/internal/stats"
@@ -48,6 +49,7 @@ func newRoot(version string) *cobra.Command {
 		lsCmd(),
 		showCmd(),
 		statsCmd(),
+		exportCmd(),
 		diagnoseCmd(),
 		lastErrorCmd(),
 		tailCmd(),
@@ -207,6 +209,38 @@ func statsCmd() *cobra.Command {
 	cmd.Flags().String("save", "", "save this summary as a named baseline to compare against later")
 	cmd.Flags().String("baseline", "", "show the delta against a previously saved baseline")
 	cmd.Flags().Bool("json", false, "machine-readable output")
+	return cmd
+}
+
+func exportCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "export <id>",
+		Short: "Export one request's full trace as a self-contained HTML file (share it / attach to CI)",
+		Args:  cobra.ExactArgs(1),
+		RunE: func(cmd *cobra.Command, args []string) error {
+			out, _ := cmd.Flags().GetString("out")
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			req, err := st.GetRequest(args[0])
+			if err != nil {
+				return err
+			}
+			doc := export.HTML(req)
+			if out == "" || out == "-" {
+				fmt.Print(doc)
+				return nil
+			}
+			if err := os.WriteFile(out, []byte(doc), 0o644); err != nil {
+				return err
+			}
+			fmt.Fprintf(os.Stderr, "wrote %s (%s %s)\n", out, req.Method, req.Path)
+			return nil
+		},
+	}
+	cmd.Flags().StringP("out", "o", "", "write to a file instead of stdout")
 	return cmd
 }
 

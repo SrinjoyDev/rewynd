@@ -148,6 +148,7 @@ file into your project and any agent learns the `clear → trigger → watch →
 | `rewynd run <cmd>` | Run your dev command with recording on (auto-starts the core) |
 | `rewynd ls` | List requests (`--status 5xx`, `--slow`, `--has-error`, `--path`, `--json`) |
 | `rewynd show <id>` | Full correlated trace for one request (`--json`) |
+| `rewynd export <id>` | Write the trace as a self-contained HTML file (`-o trace.html`) — share it, attach it to a PR or CI |
 | `rewynd stats` | Load summary: throughput, latency p50/p95/p99, error rate, by endpoint. `--save <name>` then `--baseline <name>` to see if a fix helped (`--json`) |
 | `rewynd watch` | Block until a matching request is recorded, then print it (`--json`) |
 | `rewynd tail` | Stream requests as they arrive |
