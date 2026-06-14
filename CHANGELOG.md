@@ -20,7 +20,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 - `rewynd diagnose` now also reports **failed outbound calls** (any that errored or returned
   ≥400) and **DB queries that errored**, not just detections and exceptions. A 5xx caused by an
   upstream failure (e.g. a 502 from an outbound 500) no longer comes back as "no problems
-  detected."
+  detected." It also reads cleaner on real telemetry (no leading colon for a typeless
+  exception; no redundant hint when the stack is just the message).
+- `rewynd show` **folds repeated queries and outbound calls** into one line — an N+1's 50
+  identical statements become `800ms  SELECT … = ?  ×50 (avg 16ms)` instead of 50 raw rows.
 
 ## [0.2.1] - 2026-06-14
 
