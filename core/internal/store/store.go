@@ -334,6 +334,8 @@ func (s *Store) GetRequest(idOrPrefix string) (*model.Request, error) {
 	}
 
 	r.Detections = detect.NPlusOne(id, r.Queries, detect.DefaultNPlusOneThreshold)
+	r.Detections = append(r.Detections, detect.SlowQueries(id, r.Queries, 0)...)
+	r.Detections = append(r.Detections, detect.SlowRequest(id, r.DurationMs, 0)...)
 	r.Counts = model.Counts{
 		Queries: len(r.Queries), Outbound: len(r.Outbound),
 		Logs: len(r.Logs), Exceptions: len(r.Exceptions),

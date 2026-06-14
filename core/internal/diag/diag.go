@@ -3,7 +3,6 @@
 package diag
 
 import (
-	"fmt"
 	"strings"
 
 	"github.com/SrinjoyDev/rewynd/internal/model"
@@ -32,11 +31,6 @@ func Diagnose(r *model.Request) []Problem {
 		}
 		seen[key] = true
 		ps = append(ps, Problem{"exception", strings.TrimSpace(e.Type + ": " + oneLine(e.Message)), firstLine(e.Stack)})
-	}
-	for _, q := range r.Queries {
-		if q.DurationMs >= 100 {
-			ps = append(ps, Problem{"slow_query", fmt.Sprintf("slow query (%.0fms): %s", q.DurationMs, oneLine(q.Statement)), ""})
-		}
 	}
 	return ps
 }

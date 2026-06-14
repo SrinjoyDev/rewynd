@@ -44,6 +44,26 @@ func TestNPlusOneSkipsEmpty(t *testing.T) {
 	}
 }
 
+func TestSlowQueries(t *testing.T) {
+	qs := []model.Query{
+		{Statement: "SELECT 1", DurationMs: 5},
+		{Statement: "SELECT slow", DurationMs: 250},
+	}
+	ds := SlowQueries("r", qs, 0)
+	if len(ds) != 1 || ds[0].Type != model.DetectSlowQuery {
+		t.Fatalf("want one slow_query, got %+v", ds)
+	}
+}
+
+func TestSlowRequest(t *testing.T) {
+	if ds := SlowRequest("r", 1500, 0); len(ds) != 1 || ds[0].Type != model.DetectSlowRequest {
+		t.Fatalf("want slow_request, got %+v", ds)
+	}
+	if ds := SlowRequest("r", 200, 0); ds != nil {
+		t.Fatalf("fast request must not flag, got %+v", ds)
+	}
+}
+
 func TestNPlusOneRanksByCount(t *testing.T) {
 	qs := append(repeat("A", 6), repeat("B", 9)...)
 	ds := NPlusOne("r", qs, 5)

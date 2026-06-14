@@ -71,6 +71,48 @@ func NPlusOne(reqID string, queries []model.Query, threshold int) []model.Detect
 	return out
 }
 
+const (
+	DefaultSlowQueryMs   = 100
+	DefaultSlowRequestMs = 1000
+)
+
+// SlowQueries flags individual queries over the threshold.
+func SlowQueries(reqID string, queries []model.Query, thresholdMs float64) []model.Detection {
+	if thresholdMs <= 0 {
+		thresholdMs = DefaultSlowQueryMs
+	}
+	var out []model.Detection
+	for _, q := range queries {
+		if q.DurationMs < thresholdMs {
+			continue
+		}
+		out = append(out, model.Detection{
+			RequestID: reqID, Type: model.DetectSlowQuery, Severity: "warn",
+			Title:      fmt.Sprintf("Slow query — %.0fms", q.DurationMs),
+			Summary:    fmt.Sprintf("%.0fms: %s", q.DurationMs, truncate(q.Statement, 80)),
+			Evidence:   map[string]any{"duration_ms": q.DurationMs, "statement": q.Statement},
+			Suggestion: "Add an index, narrow the result set, or cache.",
+		})
+	}
+	return out
+}
+
+// SlowRequest flags the request itself when it exceeds the threshold.
+func SlowRequest(reqID string, durationMs, thresholdMs float64) []model.Detection {
+	if thresholdMs <= 0 {
+		thresholdMs = DefaultSlowRequestMs
+	}
+	if durationMs < thresholdMs {
+		return nil
+	}
+	return []model.Detection{{
+		RequestID: reqID, Type: model.DetectSlowRequest, Severity: "warn",
+		Title:    fmt.Sprintf("Slow request — %.0fms", durationMs),
+		Summary:  fmt.Sprintf("This request took %.0fms end to end.", durationMs),
+		Evidence: map[string]any{"duration_ms": durationMs},
+	}}
+}
+
 func truncate(s string, n int) string {
 	if len(s) > n {
 		return s[:n] + "…"
