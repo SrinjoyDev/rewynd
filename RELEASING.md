@@ -28,6 +28,13 @@ The [Release workflow](.github/workflows/release.yml) then:
 
 If a token is absent the corresponding publish step is skipped — the GitHub Release still happens.
 
+## Publishing the packages after adding tokens
+
+If you tagged a release before configuring `NPM_TOKEN` / `PYPI_TOKEN`, you do **not** need to
+re-tag. Add the secrets, then go to **Actions → Release → Run workflow** and enter the existing
+tag (e.g. `v0.1.0`). The manual run rebuilds the binaries locally (it does not re-publish the
+existing GitHub Release) and pushes the npm + PyPI packages.
+
 ## Versioning
 
 - The Go binary version is injected at build time via `-ldflags -X main.version={{.Version}}`.
