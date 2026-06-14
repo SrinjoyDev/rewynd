@@ -18,22 +18,24 @@ The [Release workflow](.github/workflows/release.yml) then:
    `@rewynd/shim`, to **npm**.
 3. The Python `rewynd` package is built and published to **PyPI**.
 
-## Required secrets (repo -> Settings -> Secrets -> Actions)
+## Publishing credentials
 
-| Secret | Used for |
+| Target | Credential |
 |---|---|
-| `NPM_TOKEN` | publishing `rewynd`, `@rewynd/shim`, `@rewynd/cli-*` |
-| `PYPI_TOKEN` | publishing `rewynd` on PyPI |
-| `GITHUB_TOKEN` | the GitHub Release (provided automatically) |
+| **npm** (`@rewynd/cli`, `@rewynd/shim`, `@rewynd/cli-*`) | repo secret `NPM_TOKEN` |
+| **PyPI** (`rewynd`) | **Trusted Publishing** (OIDC) — no token; configure at <https://pypi.org/manage/account/publishing/> with owner `SrinjoyDev`, repo `rewynd`, workflow `release.yml` |
+| **GitHub Release** | `GITHUB_TOKEN` (provided automatically) |
 
-If a token is absent the corresponding publish step is skipped — the GitHub Release still happens.
+If `NPM_TOKEN` is absent the npm step is skipped; if the PyPI trusted publisher isn't configured
+the PyPI step fails — the GitHub Release still happens.
 
-## Publishing the packages after adding tokens
+## Re-publishing for an existing tag
 
-If you tagged a release before configuring `NPM_TOKEN` / `PYPI_TOKEN`, you do **not** need to
-re-tag. Add the secrets, then go to **Actions → Release → Run workflow** and enter the existing
-tag (e.g. `v0.1.0`). The manual run rebuilds the binaries locally (it does not re-publish the
-existing GitHub Release) and pushes the npm + PyPI packages.
+If you tagged a release before the credentials were in place, you do **not** need to re-tag.
+Configure them, then go to **Actions → Release → Run workflow** and enter the existing tag
+(e.g. `v0.2.1`). The manual run rebuilds the binaries locally (it does not re-publish the
+existing GitHub Release) and pushes the npm + PyPI packages (the npm step skips versions already
+on the registry).
 
 ## Versioning
 

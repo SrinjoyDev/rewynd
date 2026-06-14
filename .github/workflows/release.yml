@@ -13,6 +13,7 @@ on:
 
 permissions:
   contents: write
+  id-token: write # PyPI Trusted Publishing (OIDC)
 
 env:
   VERSION: ${{ github.event.inputs.tag || github.ref_name }}
@@ -71,17 +72,17 @@ jobs:
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
-      # PyPI: the Python shim.
+      # PyPI: the Python shim, via Trusted Publishing (OIDC — no token to store or rotate).
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Publish to PyPI
+      - name: Build the Python package
         run: |
-          if [ -z "$TWINE_PASSWORD" ]; then echo "PYPI_TOKEN not set — skipping PyPI publish"; exit 0; fi
-          python -m pip install --quiet build twine
+          python -m pip install --quiet build
           sed -i "s/^version = .*/version = \"${VERSION#v}\"/" packages/shim-python/pyproject.toml
           python -m build packages/shim-python
-          python -m twine upload packages/shim-python/dist/*
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/shim-python/dist
+          skip-existing: true
