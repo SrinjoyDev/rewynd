@@ -5,6 +5,19 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 
 ## [Unreleased]
 
+## [0.2.1] - 2026-06-14
+
+### Fixed
+
+- npm packages now install cleanly for everyone. The first 0.2.0 publish shipped broken
+  metadata; this release corrects it:
+  - Pinned the OpenTelemetry experimental dependencies to the coherent **0.218.0** set
+    (`api-logs`/`sdk-logs` had been referenced at a `0.219.0` version that was unpublished from
+    npm, so a fresh `npm install` couldn't resolve the tree).
+  - The CLI is published as **`@rewynd/cli`** — npm blocks the unscoped `rewynd` name as too
+    similar to an existing package. The installed binary is still `rewynd`.
+  - `@rewynd/shim` is no longer marked private, and the release's npm publish step is idempotent.
+
 ## [0.2.0] - 2026-06-14
 
 ### Added
@@ -64,5 +77,6 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   binary via `optionalDependencies`) and **PyPI**, plus a `curl | sh` installer and a
   tag-driven release workflow.
 
-[Unreleased]: https://github.com/SrinjoyDev/rewynd/compare/v0.2.0...HEAD
+[Unreleased]: https://github.com/SrinjoyDev/rewynd/compare/v0.2.1...HEAD
+[0.2.1]: https://github.com/SrinjoyDev/rewynd/releases/tag/v0.2.1
 [0.2.0]: https://github.com/SrinjoyDev/rewynd/releases/tag/v0.2.0

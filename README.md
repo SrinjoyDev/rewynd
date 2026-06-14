@@ -29,7 +29,7 @@ happened. No `console.log`, no re-running.
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
 
-> **v0.2.0 is live.** The core, the **TUI**, the CLI, the agent loop, the **MCP server**,
+> **v0.2.1 is live.** The core, the **TUI**, the CLI, the agent loop, the **MCP server**,
 > capture across **Node / Python / Go / Ruby / any OpenTelemetry language**, distributed
 > traces, background jobs, and the load view all work today — install below. Stars and
 > feedback welcome.
@@ -212,7 +212,7 @@ languages — one local recorder for every backend, human or agent.
 - [x] Header capture + redaction; outbound HTTP
 - [x] **Python** shim (FastAPI/Flask/Django) over the same core — the multi-language unlock
 - [x] Request/response body capture (redacted, size-capped)
-- [x] **v0.2.0** released: cross-platform binaries + `curl | sh` installer + `go install`
+- [x] **v0.2.1** released: cross-platform binaries + `curl | sh` installer + `go install`
 - [x] **Agent-native**: MCP instructions + `get_stats`; drop-in [integrations](./integrations/) for Claude Code, Cursor, Windsurf, OpenCode, Codex, Cline, Devin
 - [x] TUI control panel: live search, slow filter, scrollable enriched detail
 - [x] **OTLP/gRPC** intake (:4317) alongside HTTP — most SDKs default to gRPC
