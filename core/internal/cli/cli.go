@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"sort"
 	"strings"
 	"syscall"
@@ -148,9 +149,16 @@ func statsCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:   "stats",
 		Short: "Load/performance summary: throughput, latency percentiles, error rate, by endpoint",
+		Long: "Load/performance summary over the recorded window.\n\n" +
+			"Compare runs to see if a fix helped:\n" +
+			"  rewynd stats --save before     # snapshot the current numbers\n" +
+			"  # ... change code, re-run the load ...\n" +
+			"  rewynd stats --baseline before # show the delta (p95, error rate, by endpoint)",
 		RunE: func(cmd *cobra.Command, _ []string) error {
 			asJSON, _ := cmd.Flags().GetBool("json")
 			last, _ := cmd.Flags().GetInt("last")
+			save, _ := cmd.Flags().GetString("save")
+			baseline, _ := cmd.Flags().GetString("baseline")
 			st, err := openStore()
 			if err != nil {
 				return err
@@ -165,14 +173,39 @@ func statsCmd() *cobra.Command {
 				return err
 			}
 			s := stats.Compute(reqs)
-			if asJSON {
-				return printJSON(s)
+
+			if baseline != "" {
+				base, err := loadSnapshot(baseline)
+				if err != nil {
+					return err
+				}
+				diff := stats.Compare(base, s)
+				if asJSON {
+					return printJSON(diff)
+				}
+				printStatsDiff(baseline, diff)
+				return nil
 			}
-			printStats(s)
+
+			if asJSON {
+				if err := printJSON(s); err != nil {
+					return err
+				}
+			} else {
+				printStats(s)
+			}
+			if save != "" {
+				if err := saveSnapshot(save, s); err != nil {
+					return err
+				}
+				fmt.Fprintf(os.Stderr, "saved snapshot %q\n", save)
+			}
 			return nil
 		},
 	}
 	cmd.Flags().Int("last", 0, "summarize only the last N flows (default: the whole buffer)")
+	cmd.Flags().String("save", "", "save this summary as a named baseline to compare against later")
+	cmd.Flags().String("baseline", "", "show the delta against a previously saved baseline")
 	cmd.Flags().Bool("json", false, "machine-readable output")
 	return cmd
 }
@@ -525,6 +558,71 @@ func printStats(s stats.Stats) {
 			e.ErrorRate*100, dur(e.P95Ms), dur(e.MaxMs), e.Count, e.Method, e.Route, flag)
 	}
 	tw.Flush()
+}
+
+func snapshotPath(label string) string {
+	return filepath.Join(config.DataDir(), "snapshots", label+".json")
+}
+
+func saveSnapshot(label string, s stats.Stats) error {
+	p := snapshotPath(label)
+	if err := os.MkdirAll(filepath.Dir(p), 0o755); err != nil {
+		return err
+	}
+	b, err := json.MarshalIndent(s, "", "  ")
+	if err != nil {
+		return err
+	}
+	return os.WriteFile(p, b, 0o644)
+}
+
+func loadSnapshot(label string) (stats.Stats, error) {
+	var s stats.Stats
+	b, err := os.ReadFile(snapshotPath(label))
+	if err != nil {
+		return s, fmt.Errorf("no baseline %q — save one first with `rewynd stats --save %s`", label, label)
+	}
+	return s, json.Unmarshal(b, &s)
+}
+
+// printStatsDiff renders the change from a saved baseline to the current run — the
+// "did my fix help" view.
+func printStatsDiff(label string, d stats.Diff) {
+	fmt.Printf("baseline %q (%d flows)  ->  current (%d flows)\n", label, d.Base.Total, d.Cur.Total)
+	fmt.Printf("latency   p50 %s   p95 %s   p99 %s\n",
+		deltaDur(d.Base.Latency.P50, d.Cur.Latency.P50),
+		deltaDur(d.Base.Latency.P95, d.Cur.Latency.P95),
+		deltaDur(d.Base.Latency.P99, d.Cur.Latency.P99))
+	fmt.Printf("errors    %.1f%% -> %.1f%% (%+.1fpp)\n", d.Base.ErrorRate*100, d.Cur.ErrorRate*100, (d.Cur.ErrorRate-d.Base.ErrorRate)*100)
+	fmt.Printf("throughput %.1f -> %.1f req/s\n", d.Base.ReqPerSec, d.Cur.ReqPerSec)
+
+	if len(d.Endpoints) == 0 {
+		return
+	}
+	fmt.Println("\nBY ENDPOINT")
+	tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+	for _, e := range d.Endpoints {
+		name := e.Method + " " + e.Route
+		switch {
+		case e.New:
+			fmt.Fprintf(tw, "%s\tnew\tp95 %s\terrors %.0f%%\n", name, dur(e.CurP95), e.CurErrRate*100)
+		case e.Gone:
+			fmt.Fprintf(tw, "%s\tgone\t\t\n", name)
+		default:
+			fmt.Fprintf(tw, "%s\t\tp95 %s\terrors %.0f%% -> %.0f%%\n",
+				name, deltaDur(e.BaseP95, e.CurP95), e.BaseErrRate*100, e.CurErrRate*100)
+		}
+	}
+	tw.Flush()
+}
+
+// deltaDur renders "340ms -> 120ms (-65%)" for a before/after duration.
+func deltaDur(base, cur float64) string {
+	s := dur(base) + " -> " + dur(cur)
+	if base > 0 {
+		s += fmt.Sprintf(" (%+.0f%%)", (cur-base)/base*100)
+	}
+	return s
 }
 
 // statusCell renders the status column for both flows: an HTTP code, or ok/fail for a job

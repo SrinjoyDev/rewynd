@@ -183,3 +183,55 @@ func hasNPlusOne(r *model.Request) bool {
 	}
 	return false
 }
+
+// EndpointDelta is one endpoint's change between two runs. Base/Cur are the p95 (ms) and error
+// rate; New/Gone mark endpoints that appeared or disappeared.
+type EndpointDelta struct {
+	Method      string  `json:"method"`
+	Route       string  `json:"route"`
+	BaseP95     float64 `json:"base_p95_ms"`
+	CurP95      float64 `json:"cur_p95_ms"`
+	BaseErrRate float64 `json:"base_error_rate"`
+	CurErrRate  float64 `json:"cur_error_rate"`
+	New         bool    `json:"new,omitempty"`
+	Gone        bool    `json:"gone,omitempty"`
+}
+
+// Diff is the change from a baseline run to the current one — the "did my fix help" answer.
+type Diff struct {
+	Base      Stats           `json:"base"`
+	Cur       Stats           `json:"cur"`
+	Endpoints []EndpointDelta `json:"endpoints"`
+}
+
+// Compare diffs a baseline summary against the current one, pairing endpoints by method+route.
+func Compare(base, cur Stats) Diff {
+	d := Diff{Base: base, Cur: cur}
+	baseByKey := map[string]Endpoint{}
+	for _, e := range base.Endpoints {
+		baseByKey[e.Method+" "+e.Route] = e
+	}
+	seen := map[string]bool{}
+	for _, c := range cur.Endpoints {
+		key := c.Method + " " + c.Route
+		seen[key] = true
+		if b, ok := baseByKey[key]; ok {
+			d.Endpoints = append(d.Endpoints, EndpointDelta{
+				Method: c.Method, Route: c.Route,
+				BaseP95: b.P95Ms, CurP95: c.P95Ms, BaseErrRate: b.ErrorRate, CurErrRate: c.ErrorRate,
+			})
+		} else {
+			d.Endpoints = append(d.Endpoints, EndpointDelta{
+				Method: c.Method, Route: c.Route, CurP95: c.P95Ms, CurErrRate: c.ErrorRate, New: true,
+			})
+		}
+	}
+	for _, b := range base.Endpoints {
+		if !seen[b.Method+" "+b.Route] {
+			d.Endpoints = append(d.Endpoints, EndpointDelta{
+				Method: b.Method, Route: b.Route, BaseP95: b.P95Ms, BaseErrRate: b.ErrorRate, Gone: true,
+			})
+		}
+	}
+	return d
+}

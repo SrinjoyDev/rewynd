@@ -142,7 +142,7 @@ file into your project and any agent learns the `clear → trigger → watch →
 | `rewynd run <cmd>` | Run your dev command with recording on (auto-starts the core) |
 | `rewynd ls` | List requests (`--status 5xx`, `--slow`, `--has-error`, `--path`, `--json`) |
 | `rewynd show <id>` | Full correlated trace for one request (`--json`) |
-| `rewynd stats` | Load summary: throughput, latency p50/p95/p99, error rate, by endpoint (`--json`) |
+| `rewynd stats` | Load summary: throughput, latency p50/p95/p99, error rate, by endpoint. `--save <name>` then `--baseline <name>` to see if a fix helped (`--json`) |
 | `rewynd watch` | Block until a matching request is recorded, then print it (`--json`) |
 | `rewynd tail` | Stream requests as they arrive |
 | `rewynd diagnose <id>` | Summarize what's wrong (N+1, exceptions, slow queries) |
@@ -219,8 +219,9 @@ languages — one local recorder for every backend, human or agent.
 - [x] **Background jobs / queue consumers** recorded as first-class flows (not just HTTP)
 - [x] **Load view**: `rewynd stats` + `get_load_stats` + TUI `S` panel (throughput, p50/p95/p99, error rate, by endpoint)
 - [x] **Go SDK** (`sdk/go`) — `rewynd.Start(ctx)` + standard OTel instrumentation
+- [x] **Any OTel language** via `rewynd run` (Java/.NET/Ruby/PHP); **regression diff** (`stats --save`/`--baseline`)
 - [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
-- [ ] One-command shims for more languages (Java, Rust, Ruby); run-vs-run regression diffs
+- [ ] Zero-config shims that bundle the OTel agent for more languages (Ruby gem, Java helper)
 
 ## Contributing
 

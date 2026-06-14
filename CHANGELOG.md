@@ -36,6 +36,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   TUI `S` panel) report throughput, latency percentiles (p50/p95/p99/max), error rate, and a
   per-endpoint breakdown ranked worst-first — for humans and agents to spot the slow or
   erroring endpoint and compare before/after a change.
+- **Regression diff**: `rewynd stats --save <name>` snapshots a run; `rewynd stats --baseline
+  <name>` shows the delta (latency, error rate, throughput, per-endpoint, new/gone) — the
+  "did my fix help" answer.
 - **Agent-native** integrations: connect-time MCP instructions, a `get_stats` orientation
   tool, richer tool descriptions, and drop-in setups under `integrations/` for Claude Code,
   Cursor, Windsurf, OpenCode, Codex, Cline, and Devin.

@@ -59,3 +59,31 @@ func TestPercentilesNearestRank(t *testing.T) {
 		t.Errorf("p50=%.0f max=%.0f, want 60/100", p.P50, p.Max)
 	}
 }
+
+func TestCompare(t *testing.T) {
+	base := Stats{Total: 10, ErrorRate: 0.5, Latency: Percentiles{P95: 340},
+		Endpoints: []Endpoint{
+			{Method: "POST", Route: "/orders", P95Ms: 340, ErrorRate: 0.5},
+			{Method: "GET", Route: "/old", P95Ms: 10, ErrorRate: 0},
+		}}
+	cur := Stats{Total: 12, ErrorRate: 0.0, Latency: Percentiles{P95: 120},
+		Endpoints: []Endpoint{
+			{Method: "POST", Route: "/orders", P95Ms: 120, ErrorRate: 0},
+			{Method: "GET", Route: "/new", P95Ms: 5, ErrorRate: 0},
+		}}
+	d := Compare(base, cur)
+
+	byKey := map[string]EndpointDelta{}
+	for _, e := range d.Endpoints {
+		byKey[e.Method+" "+e.Route] = e
+	}
+	if o := byKey["POST /orders"]; o.BaseP95 != 340 || o.CurP95 != 120 || o.BaseErrRate != 0.5 || o.CurErrRate != 0 {
+		t.Errorf("/orders delta wrong: %+v", o)
+	}
+	if !byKey["GET /new"].New {
+		t.Errorf("/new should be flagged New")
+	}
+	if !byKey["GET /old"].Gone {
+		t.Errorf("/old should be flagged Gone")
+	}
+}
