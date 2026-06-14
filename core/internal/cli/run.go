@@ -11,7 +11,7 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rewyndhq/rewynd/internal/config"
+	"github.com/SrinjoyDev/rewynd/internal/config"
 )
 
 func runCmd() *cobra.Command {

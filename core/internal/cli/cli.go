@@ -16,13 +16,13 @@ import (
 
 	"github.com/spf13/cobra"
 
-	"github.com/rewyndhq/rewynd/internal/config"
-	"github.com/rewyndhq/rewynd/internal/daemon"
-	"github.com/rewyndhq/rewynd/internal/diag"
-	"github.com/rewyndhq/rewynd/internal/mcp"
-	"github.com/rewyndhq/rewynd/internal/model"
-	"github.com/rewyndhq/rewynd/internal/store"
-	"github.com/rewyndhq/rewynd/internal/tui"
+	"github.com/SrinjoyDev/rewynd/internal/config"
+	"github.com/SrinjoyDev/rewynd/internal/daemon"
+	"github.com/SrinjoyDev/rewynd/internal/diag"
+	"github.com/SrinjoyDev/rewynd/internal/mcp"
+	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/internal/tui"
 )
 
 func Execute(version string) error {

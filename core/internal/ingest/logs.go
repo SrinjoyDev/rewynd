@@ -8,8 +8,8 @@ import (
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	logspb "go.opentelemetry.io/proto/otlp/logs/v1"
 
-	"github.com/rewyndhq/rewynd/internal/model"
-	"github.com/rewyndhq/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/store"
 )
 
 func DecodeLogs(req *collogspb.ExportLogsServiceRequest) store.Batch {

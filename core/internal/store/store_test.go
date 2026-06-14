@@ -5,7 +5,7 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/rewyndhq/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/model"
 )
 
 func newTestStore(t *testing.T) *Store {

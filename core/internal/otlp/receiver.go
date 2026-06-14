@@ -11,8 +11,8 @@ import (
 	coltracepb "go.opentelemetry.io/proto/otlp/collector/trace/v1"
 	"google.golang.org/protobuf/proto"
 
-	"github.com/rewyndhq/rewynd/internal/ingest"
-	"github.com/rewyndhq/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/internal/ingest"
+	"github.com/SrinjoyDev/rewynd/internal/store"
 )
 
 type Receiver struct {

@@ -1,5 +1,13 @@
 # rewynd
 
+<p>
+  <a href="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml"><img src="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
+  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go 1.22+">
+  <img src="https://img.shields.io/badge/Node-18+-339933?logo=node.js&logoColor=white" alt="Node 18+">
+  <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
+</p>
+
 **A zero-config, OTLP-native flight recorder for your backend.** It silently records every
 HTTP request, database query, outbound call, log line, and exception during local development,
 **correlates them per request**, and lets you — or your coding agent — see exactly what

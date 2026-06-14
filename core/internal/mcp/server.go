@@ -9,9 +9,9 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/rewyndhq/rewynd/internal/diag"
-	"github.com/rewyndhq/rewynd/internal/model"
-	"github.com/rewyndhq/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/internal/diag"
+	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/store"
 )
 
 func RunStdio(ctx context.Context, st *store.Store, version string) error {

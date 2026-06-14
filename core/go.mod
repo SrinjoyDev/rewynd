@@ -1,4 +1,4 @@
-module github.com/rewyndhq/rewynd
+module github.com/SrinjoyDev/rewynd
 
 go 1.25.0
 

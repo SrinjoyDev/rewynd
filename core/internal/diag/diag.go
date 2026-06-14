@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/rewyndhq/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/model"
 )
 
 type Problem struct {

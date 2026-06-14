@@ -3,7 +3,7 @@ package detect
 import (
 	"testing"
 
-	"github.com/rewyndhq/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/model"
 )
 
 func q(norm string) model.Query {
