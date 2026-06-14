@@ -9,6 +9,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 
 - Zero-config, OTLP-native request capture with per-request correlation for **Node**
   (Express, Fastify; ESM/`tsx`) and **Python** (FastAPI / Flask / Django).
+- **Go SDK** (`github.com/SrinjoyDev/rewynd/sdk/go`): `rewynd.Start(ctx)` wires a Go service's
+  OpenTelemetry traces to the local core in one call (minimal setup, since Go has no runtime
+  auto-instrumentation), with flush-on-exit and an off switch. See `examples/go-service/`.
 - Go core: OTLP/HTTP receiver, embedded SQLite ring-buffer store, and detections
   (N+1, slow query, slow request).
 - Three frontends over one core: a Bubble Tea **TUI**, a JSON **CLI**
@@ -44,6 +47,9 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 
 - The Node shim now flushes recorded spans on normal process exit (`beforeExit`), not only on
   SIGTERM/SIGINT — so short-lived workers, scripts, and one-off jobs no longer lose their data.
+- The Go module path now matches its directory (`github.com/SrinjoyDev/rewynd/core`), so
+  `go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest` resolves (it previously
+  could not — there was no go.mod at the path's root).
 - Distribution: cross-platform binaries (goreleaser), `rewynd` on **npm** (per-platform
   binary via `optionalDependencies`) and **PyPI**, plus a `curl | sh` installer and a
   tag-driven release workflow.

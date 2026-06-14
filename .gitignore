@@ -36,3 +36,6 @@ packages/cli-platforms/
 *.log
 .idea/
 .vscode/
+
+# go example binary
+/examples/go-service/rewynd-example-go

@@ -187,8 +187,15 @@ Sequelize, Knex; `fetch` / axios; `console`, `pino`, `winston`. One command:
 **Python** — FastAPI, Flask, Django; `psycopg2`, SQLAlchemy; `requests`, `httpx`; stdlib
 `logging`. One command: `pip install rewynd && rewynd-run <your command>`.
 
-Both feed the **same** core over OTLP, so the TUI, CLI, and MCP work identically across
-languages. Adding a language is a thin shim, never a core rewrite.
+**Go** — `go get github.com/SrinjoyDev/rewynd/sdk/go`, then `rewynd.Start(ctx)` at boot and
+standard OpenTelemetry instrumentation (`otelhttp`, `otelsql`). Go has no runtime
+auto-instrumentation, so it's minimal setup rather than zero — but it feeds the same core. See
+[`sdk/go`](./sdk/go/) and [`examples/go-service`](./examples/go-service/).
+
+They all feed the **same** core over OTLP, so the TUI, CLI, and MCP work identically across
+languages. Any other OpenTelemetry-emitting service (Java, Rust, Ruby, .NET) connects too by
+pointing its OTLP exporter at `127.0.0.1:4317`. Adding a first-class shim is thin, never a core
+rewrite.
 
 ## Roadmap
 
@@ -208,8 +215,9 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] **Distributed traces**: multi-service stitching with per-service attribution
 - [x] **Background jobs / queue consumers** recorded as first-class flows (not just HTTP)
 - [x] **Load view**: `rewynd stats` + `get_load_stats` + TUI `S` panel (throughput, p50/p95/p99, error rate, by endpoint)
+- [x] **Go SDK** (`sdk/go`) — `rewynd.Start(ctx)` + standard OTel instrumentation
 - [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
-- [ ] Run-vs-run comparison (regression diffs); more framework examples (Nest, Next, Prisma)
+- [ ] One-command shims for more languages (Java, Rust, Ruby); run-vs-run regression diffs
 
 ## Contributing
 
