@@ -144,6 +144,20 @@ func TestJobFlowRendersDistinctly(t *testing.T) {
 	}
 }
 
+func TestStatsOverlay(t *testing.T) {
+	reqs := []model.Request{
+		{Method: "POST", Route: "/orders", StatusCode: 500, Error: true, DurationMs: 1200, EndedAt: 1_200_000_000},
+		{Method: "GET", Route: "/users", StatusCode: 200, DurationMs: 20, StartedAt: 1_000_000_000, EndedAt: 1_020_000_000},
+	}
+	a := app{width: 120, height: 40, reqs: reqs, showStats: true}
+	out := a.View()
+	for _, want := range []string{"load", "latency", "errors", "BY ENDPOINT", "/orders"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("stats overlay missing %q", want)
+		}
+	}
+}
+
 func TestListOptsReflectsFilters(t *testing.T) {
 	o := app{filter: "5xx", search: "/api/users", slowOnly: true}.listOpts()
 	if o.StatusClass != "5xx" || o.PathLike != "/api/users" || !o.Slow {

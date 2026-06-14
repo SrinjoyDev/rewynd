@@ -8,6 +8,7 @@ import (
 	"github.com/charmbracelet/lipgloss"
 
 	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/stats"
 )
 
 var (
@@ -32,6 +33,9 @@ func (a app) View() string {
 	}
 	if a.help {
 		return lipgloss.Place(a.width, a.height, lipgloss.Center, lipgloss.Center, helpBox())
+	}
+	if a.showStats {
+		return lipgloss.Place(a.width, a.height, lipgloss.Center, lipgloss.Center, statsBox(a.reqs, a.width))
 	}
 	listW, detailW, bodyH := a.layout()
 
@@ -80,7 +84,7 @@ func (a app) footerText() string {
 	if a.searching {
 		return " search /" + a.search + "█  (enter keep · esc clear)"
 	}
-	s := " j/k move · / search · f status · s slow · e error · ^d/^u scroll · c clear · ? help · q quit"
+	s := " j/k move · / search · f status · s slow · S stats · e error · ^d/^u scroll · c clear · ? help · q quit"
 	if lipgloss.Width(s) > a.width {
 		s = truncate(s, a.width)
 	}
@@ -331,6 +335,64 @@ func svcTag(s string) string {
 	return lipgloss.NewStyle().Foreground(cBlue).Render("[" + s + "]")
 }
 
+// statsBox is the load/performance overlay (S): throughput, latency percentiles, error rate,
+// and the worst endpoints — computed from the visible window.
+func statsBox(reqs []model.Request, width int) string {
+	s := stats.Compute(reqs)
+	var b strings.Builder
+	title := lipgloss.NewStyle().Foreground(cMauve).Bold(true)
+	label := lipgloss.NewStyle().Foreground(cSub)
+	b.WriteString(title.Render("rewynd · load"))
+	if s.Total == 0 {
+		b.WriteString("\n\n" + dimStyle.Render("  nothing recorded yet"))
+		return boxFrame(b.String())
+	}
+	b.WriteString("\n\n")
+	tput := fmt.Sprintf("%d flows", s.Total)
+	if s.WindowMs > 0 {
+		tput += fmt.Sprintf(" · %s · %.1f req/s", durStr(s.WindowMs), s.ReqPerSec)
+	}
+	b.WriteString("  " + lipgloss.NewStyle().Foreground(cText).Render(tput) + "\n\n")
+	b.WriteString("  " + label.Render("latency  ") +
+		fmt.Sprintf("p50 %-7s p95 %-7s p99 %-7s max %s\n", durStr(s.Latency.P50), durStr(s.Latency.P95), durStr(s.Latency.P99), durStr(s.Latency.Max)))
+	errColor := cGreen
+	if s.ErrorRate > 0 {
+		errColor = cRed
+	}
+	b.WriteString("  " + label.Render("errors   ") +
+		lipgloss.NewStyle().Foreground(errColor).Render(fmt.Sprintf("%.1f%% (%d)", s.ErrorRate*100, s.Errors)) +
+		dimStyle.Render(fmt.Sprintf("   5xx %d · 4xx %d · failed jobs %d", s.ServerErrors, s.ClientErrors, s.FailedJobs)) + "\n")
+	b.WriteString("  " + label.Render("issues   ") + dimStyle.Render(fmt.Sprintf("N+1 in %d · slow %d", s.NPlusOne, s.Slow)) + "\n")
+
+	if len(s.Endpoints) > 0 {
+		b.WriteString("\n  " + headStyle.Render("BY ENDPOINT (worst first)") + "\n")
+		for i, e := range s.Endpoints {
+			if i >= 8 {
+				b.WriteString(dimStyle.Render(fmt.Sprintf("    … +%d more\n", len(s.Endpoints)-i)))
+				break
+			}
+			ec := cGreen
+			if e.ErrorRate > 0 {
+				ec = cRed
+			}
+			flag := ""
+			if e.NPlusOne {
+				flag = lipgloss.NewStyle().Foreground(cMauve).Render(" N+1")
+			}
+			b.WriteString(fmt.Sprintf("    %s  %s  %s  %s\n",
+				lipgloss.NewStyle().Foreground(ec).Render(fmt.Sprintf("%3.0f%%", e.ErrorRate*100)),
+				dimStyle.Render(fmt.Sprintf("p95 %-7s", durStr(e.P95Ms))),
+				truncate(e.Method+" "+e.Route, maxi(10, width/2)), flag))
+		}
+	}
+	b.WriteString("\n" + dimStyle.Render("  any key to close"))
+	return boxFrame(b.String())
+}
+
+func boxFrame(s string) string {
+	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(cMauve).Padding(1, 3).Render(s)
+}
+
 func helpBox() string {
 	keys := [][2]string{
 		{"j, down", "move down"},
@@ -340,6 +402,7 @@ func helpBox() string {
 		{"f", "cycle status filter (2xx/4xx/5xx)"},
 		{"s", "toggle slow-only"},
 		{"e", "jump to the next error"},
+		{"S", "load stats (latency, errors, by endpoint)"},
 		{"^d / ^u", "scroll the detail pane"},
 		{"esc", "clear search / filter"},
 		{"c", "clear the buffer"},

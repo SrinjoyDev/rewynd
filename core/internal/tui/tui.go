@@ -29,6 +29,7 @@ type app struct {
 	searching     bool   // typing into the search field
 	slowOnly      bool
 	help          bool
+	showStats     bool
 	err           error
 }
 
@@ -84,12 +85,22 @@ func (a app) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
 		a.help = false
 		return a, nil
 	}
+	if a.showStats {
+		if k.String() == "ctrl+c" {
+			return a, tea.Quit
+		}
+		a.showStats = false
+		return a, nil
+	}
 	if a.searching {
 		return a.searchKey(k)
 	}
 	switch k.String() {
 	case "?":
 		a.help = true
+		return a, nil
+	case "S":
+		a.showStats = true
 		return a, nil
 	case "q", "ctrl+c":
 		return a, tea.Quit
