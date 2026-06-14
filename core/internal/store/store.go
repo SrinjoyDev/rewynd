@@ -48,6 +48,16 @@ func Open(path string) (*Store, error) {
 		db.Close()
 		return nil, fmt.Errorf("schema: %w", err)
 	}
+	// Additive migrations for DBs created before a column existed. ADD COLUMN errors with
+	// "duplicate column name" once applied, which is the idempotent no-op we want.
+	for _, m := range []string{
+		"ALTER TABLE requests ADD COLUMN kind TEXT",
+	} {
+		if _, err := db.Exec(m); err != nil && !strings.Contains(err.Error(), "duplicate column") {
+			db.Close()
+			return nil, fmt.Errorf("migrate %q: %w", m, err)
+		}
+	}
 	return &Store{db: db}, nil
 }
 
@@ -68,16 +78,16 @@ func (s *Store) WriteBatch(b Batch) error {
 		// They share this row's id (the trace id), so keep the earliest-starting one — the entry
 		// service — as the canonical root, regardless of which export arrives last.
 		if _, err := tx.Exec(`
-			INSERT INTO requests (id,trace_id,service,method,path,route,status_code,started_at,ended_at,duration_ms,error,req_json,resp_json)
-			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
+			INSERT INTO requests (id,trace_id,service,kind,method,path,route,status_code,started_at,ended_at,duration_ms,error,req_json,resp_json)
+			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)
 			ON CONFLICT(id) DO UPDATE SET
-			  service=excluded.service, method=excluded.method, path=excluded.path, route=excluded.route,
+			  service=excluded.service, kind=excluded.kind, method=excluded.method, path=excluded.path, route=excluded.route,
 			  status_code=excluded.status_code, started_at=excluded.started_at,
 			  ended_at=excluded.ended_at, duration_ms=excluded.duration_ms, error=excluded.error,
 			  req_json=COALESCE(excluded.req_json, requests.req_json),
 			  resp_json=COALESCE(excluded.resp_json, requests.resp_json)
 			WHERE excluded.started_at <= requests.started_at`,
-			r.ID, r.TraceID, r.Service, r.Method, r.Path, r.Route, r.StatusCode,
+			r.ID, r.TraceID, r.Service, r.Kind, r.Method, r.Path, r.Route, r.StatusCode,
 			r.StartedAt, r.EndedAt, r.DurationMs, boolToInt(r.Error),
 			jsonOrNil(r.Request), jsonOrNil(r.Response),
 		); err != nil {
@@ -156,7 +166,7 @@ func (s *Store) ListRequests(opts ListOptions) ([]model.Request, error) {
 		where = append(where, "duration_ms>=?")
 		args = append(args, ms)
 	}
-	q := "SELECT id,trace_id,service,method,path,route,status_code,started_at,ended_at,duration_ms,error FROM requests"
+	q := "SELECT id,trace_id,service,kind,method,path,route,status_code,started_at,ended_at,duration_ms,error FROM requests"
 	if len(where) > 0 {
 		q += " WHERE " + strings.Join(where, " AND ")
 	}
@@ -282,7 +292,7 @@ func (s *Store) GetRequest(idOrPrefix string) (*model.Request, error) {
 	if err != nil {
 		return nil, err
 	}
-	row := s.db.QueryRow("SELECT id,trace_id,service,method,path,route,status_code,started_at,ended_at,duration_ms,error FROM requests WHERE id=?", id)
+	row := s.db.QueryRow("SELECT id,trace_id,service,kind,method,path,route,status_code,started_at,ended_at,duration_ms,error FROM requests WHERE id=?", id)
 	r, err := scanRequestRow(row)
 	if err != nil {
 		return nil, err
@@ -473,14 +483,18 @@ type rowScanner interface{ Scan(...any) error }
 
 func scanRequestRow(row rowScanner) (model.Request, error) {
 	var r model.Request
-	var service, route sql.NullString
+	var service, kind, route sql.NullString
 	var errInt sql.NullInt64
-	if err := row.Scan(&r.ID, &r.TraceID, &service, &r.Method, &r.Path, &route,
+	if err := row.Scan(&r.ID, &r.TraceID, &service, &kind, &r.Method, &r.Path, &route,
 		&r.StatusCode, &r.StartedAt, &r.EndedAt, &r.DurationMs, &errInt); err != nil {
 		return r, err
 	}
 	r.SchemaVersion = model.SchemaVersion
 	r.Service = service.String
+	r.Kind = kind.String
+	if r.Kind == "" {
+		r.Kind = model.KindHTTP // rows written before kinds existed are HTTP
+	}
 	r.Route = route.String
 	r.Error = errInt.Int64 != 0
 	return r, nil

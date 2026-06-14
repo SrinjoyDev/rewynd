@@ -448,15 +448,35 @@ func printRequestTable(reqs []model.Request) {
 	tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
 	fmt.Fprintln(tw, "ID\tMETHOD\tPATH\tSTATUS\tDURATION\tQUERIES\tFLAGS")
 	for _, r := range reqs {
-		fmt.Fprintf(tw, "%s\t%s\t%s\t%d\t%s\t%d\t%s\n",
-			shortID(r.ID), r.Method, r.Path, r.StatusCode,
+		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%d\t%s\n",
+			shortID(r.ID), r.Method, r.Path, statusCell(r),
 			dur(r.DurationMs), r.Counts.Queries, flags(r))
 	}
 	tw.Flush()
 }
 
+// statusCell renders the status column for both flows: an HTTP code, or ok/fail for a job
+// (which has no status code).
+func statusCell(r model.Request) string {
+	if r.Kind == model.KindJob {
+		if r.Error {
+			return "fail"
+		}
+		return "ok"
+	}
+	return fmt.Sprintf("%d", r.StatusCode)
+}
+
 func printRequestDetail(r *model.Request) {
-	fmt.Printf("%s %s  ->  %d  (%s)\n", r.Method, r.Path, r.StatusCode, dur(r.DurationMs))
+	if r.Kind == model.KindJob {
+		outcome := "ok"
+		if r.Error {
+			outcome = "fail"
+		}
+		fmt.Printf("JOB %s %s  ->  %s  (%s)\n", r.Method, r.Path, outcome, dur(r.DurationMs))
+	} else {
+		fmt.Printf("%s %s  ->  %d  (%s)\n", r.Method, r.Path, r.StatusCode, dur(r.DurationMs))
+	}
 	fmt.Printf("id %s   trace %s\n", shortID(r.ID), r.TraceID)
 	svcs := requestServices(r)
 	multi := len(svcs) > 1
@@ -532,6 +552,9 @@ func svcSuffix(service string, multi bool) string {
 
 func flags(r model.Request) string {
 	var f []string
+	if r.Kind == model.KindJob {
+		f = append(f, "job")
+	}
 	if r.Error || r.StatusCode >= 500 {
 		f = append(f, "error")
 	}

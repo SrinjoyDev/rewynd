@@ -84,6 +84,53 @@ func TestDistributedTraceStitching(t *testing.T) {
 	}
 }
 
+// TestJobFlowFromConsumerSpan proves a queue consumer with no HTTP root still becomes a
+// first-class flow, labelled from its messaging attributes, with its DB work correlated.
+func TestJobFlowFromConsumerSpan(t *testing.T) {
+	st, err := store.Open(filepath.Join(t.TempDir(), "t.sqlite"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	defer st.Close()
+
+	trace := []byte("job-trace-id-16b")
+	batch := &coltracepb.ExportTraceServiceRequest{ResourceSpans: []*tracepb.ResourceSpans{{
+		Resource: &resourcepb.Resource{Attributes: kv(s("service.name", "worker"))},
+		ScopeSpans: []*tracepb.ScopeSpans{{Spans: []*tracepb.Span{
+			{TraceId: trace, SpanId: []byte("consumer1"), Name: "orders.created process",
+				Kind: tracepb.Span_SPAN_KIND_CONSUMER, StartTimeUnixNano: 1000, EndTimeUnixNano: 5000,
+				Attributes: kv(s("messaging.system", "kafka"), s("messaging.destination.name", "orders.created"), s("messaging.operation", "process"))},
+			{TraceId: trace, SpanId: []byte("jobdb001"), ParentSpanId: []byte("consumer1"), Name: "UPDATE",
+				Kind: tracepb.Span_SPAN_KIND_CLIENT, StartTimeUnixNano: 2000, EndTimeUnixNano: 3000,
+				Attributes: kv(s("db.system", "postgresql"), s("db.statement", "UPDATE orders SET status = 'done' WHERE id = $1"))},
+		}}},
+	}}}
+	if err := st.WriteBatch(ingest.DecodeTraces(batch)); err != nil {
+		t.Fatal(err)
+	}
+
+	reqs, err := st.ListRequests(store.ListOptions{})
+	if err != nil {
+		t.Fatal(err)
+	}
+	if len(reqs) != 1 {
+		t.Fatalf("a consumer span should record one flow, got %d", len(reqs))
+	}
+	r, err := st.GetRequest(reqs[0].ID)
+	if err != nil {
+		t.Fatal(err)
+	}
+	if r.Kind != "job" {
+		t.Errorf("kind = %q, want job", r.Kind)
+	}
+	if r.Method != "process" || r.Path != "orders.created" {
+		t.Errorf("job label = %q %q, want process orders.created", r.Method, r.Path)
+	}
+	if len(r.Queries) != 1 || r.Queries[0].Service != "worker" {
+		t.Errorf("the job's DB work should be correlated and attributed to worker, got %+v", r.Queries)
+	}
+}
+
 func exportFor(service string, spans ...*tracepb.Span) *coltracepb.ExportTraceServiceRequest {
 	return &coltracepb.ExportTraceServiceRequest{
 		ResourceSpans: []*tracepb.ResourceSpans{{

@@ -117,9 +117,9 @@ func renderRow(r model.Request, selected bool, w int, maxDur float64) string {
 		ind = lipgloss.NewStyle().Foreground(cMauve).Render("▌ ")
 		textStyle = lipgloss.NewStyle().Foreground(cText).Bold(true)
 	}
-	dot := lipgloss.NewStyle().Foreground(statusColor(r.StatusCode)).Render("●")
+	dot := lipgloss.NewStyle().Foreground(rowColor(r)).Render("●")
 	method := textStyle.Render(fmt.Sprintf("%-4s", r.Method))
-	status := lipgloss.NewStyle().Foreground(statusColor(r.StatusCode)).Render(fmt.Sprintf("%3d", r.StatusCode))
+	status := lipgloss.NewStyle().Foreground(rowColor(r)).Render(statusCell(r))
 	bar := miniBar(r.DurationMs, maxDur)
 	durTxt := dimStyle.Render(fmt.Sprintf("%6s", durStr(r.DurationMs)))
 	flags := rowFlags(r)
@@ -171,11 +171,17 @@ func detailWindowMax(total, h int) int {
 // what's wrong first (detections, exception), then how it ran (waterfall, outbound, logs),
 // then the raw payloads.
 func (a app) detailLines(r *model.Request, w int) []string {
-	sc := statusColor(r.StatusCode)
+	sc := rowColor(*r)
 	var lines []string
-	lines = append(lines,
-		lipgloss.NewStyle().Foreground(sc).Bold(true).Render(fmt.Sprintf(" %s %s", r.Method, truncate(r.Path, w-16)))+
-			dimStyle.Render(fmt.Sprintf("  %d · %s", r.StatusCode, durStr(r.DurationMs))))
+	header := lipgloss.NewStyle().Foreground(sc).Bold(true).Render(fmt.Sprintf(" %s %s", r.Method, truncate(r.Path, w-16)))
+	if r.Kind == model.KindJob {
+		header = lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render(" JOB ") +
+			lipgloss.NewStyle().Foreground(sc).Bold(true).Render(fmt.Sprintf("%s %s", r.Method, truncate(r.Path, w-20))) +
+			dimStyle.Render("  "+jobOutcome(r)+" · "+durStr(r.DurationMs))
+	} else {
+		header += dimStyle.Render(fmt.Sprintf("  %d · %s", r.StatusCode, durStr(r.DurationMs)))
+	}
+	lines = append(lines, header)
 	lines = append(lines, dimStyle.Render(fmt.Sprintf(" trace %s · %dq %do %dl", short(r.TraceID), r.Counts.Queries, r.Counts.Outbound, r.Counts.Logs)))
 
 	svcs := distinctServices(r)
@@ -361,6 +367,31 @@ func statusColor(c int) lipgloss.Color {
 	default:
 		return cSub
 	}
+}
+
+// rowColor / statusCell render both flows in the list: HTTP by status code, jobs by outcome.
+func rowColor(r model.Request) lipgloss.Color {
+	if r.Kind == model.KindJob {
+		if r.Error {
+			return cRed
+		}
+		return cMauve
+	}
+	return statusColor(r.StatusCode)
+}
+
+func statusCell(r model.Request) string {
+	if r.Kind == model.KindJob {
+		return "job"
+	}
+	return fmt.Sprintf("%3d", r.StatusCode)
+}
+
+func jobOutcome(r *model.Request) string {
+	if r.Error {
+		return "fail"
+	}
+	return "ok"
 }
 
 func miniBar(d, max float64) string {

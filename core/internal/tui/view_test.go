@@ -127,6 +127,23 @@ func TestDetailShowsServicesWhenDistributed(t *testing.T) {
 	}
 }
 
+func TestJobFlowRendersDistinctly(t *testing.T) {
+	job := model.Request{
+		ID: "job1", TraceID: "job1", Kind: model.KindJob, Method: "process", Path: "orders.created",
+		Service: "worker", DurationMs: 40,
+		Queries: []model.Query{{Statement: "UPDATE orders SET status='done'", DurationMs: 4}},
+	}
+	a := app{width: 120, height: 60, reqs: []model.Request{job}, detail: &job}
+	detail := strings.Join(a.detailLines(&job, 90), "\n")
+	if !strings.Contains(detail, "JOB") || !strings.Contains(detail, "orders.created") {
+		t.Errorf("job detail header missing JOB/label: %q", detail[:mini(80, len(detail))])
+	}
+	row := renderRow(job, false, 120, 100)
+	if !strings.Contains(row, "job") || !strings.Contains(row, "orders.created") {
+		t.Errorf("job row should show the job cell and label, got %q", row)
+	}
+}
+
 func TestListOptsReflectsFilters(t *testing.T) {
 	o := app{filter: "5xx", search: "/api/users", slowOnly: true}.listOpts()
 	if o.StatusClass != "5xx" || o.PathLike != "/api/users" || !o.Slow {

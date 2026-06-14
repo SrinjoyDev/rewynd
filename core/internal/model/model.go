@@ -5,12 +5,19 @@ package model
 // SchemaVersion is the contract version embedded in every Request payload.
 const SchemaVersion = 1
 
+// Request kinds. Empty is treated as KindHTTP for rows written before kinds existed.
+const (
+	KindHTTP = "http"
+	KindJob  = "job"
+)
+
 // SpanType is rewynd's normalized classification of an OTel span, derived from its
 // attributes/kind so frontends don't have to re-derive it.
 type SpanType string
 
 const (
-	SpanHTTPServer SpanType = "http_server" // the request root
+	SpanHTTPServer SpanType = "http_server" // an HTTP request root
+	SpanConsumer   SpanType = "consumer"    // a non-HTTP root: a queue/job consumer or RPC server
 	SpanDBQuery    SpanType = "db_query"
 	SpanHTTPClient SpanType = "http_client" // outbound
 	SpanInternal   SpanType = "internal"
@@ -27,12 +34,14 @@ const (
 	DetectDuplicateCall DetectionType = "duplicate_outbound"
 )
 
-// Request is the correlation root: one inbound HTTP request and everything it caused.
+// Request is the correlation root: one entry point (an HTTP request, or a non-HTTP flow like a
+// queue/job consumer) and everything it caused. Kind distinguishes them.
 type Request struct {
 	ID            string `json:"id"`
 	SchemaVersion int    `json:"schema_version"`
 	TraceID       string `json:"trace_id"`
 	Service       string `json:"service,omitempty"`
+	Kind          string `json:"kind,omitempty"` // "http" (default) or "job"
 
 	Method     string  `json:"method"`
 	Path       string  `json:"path"`

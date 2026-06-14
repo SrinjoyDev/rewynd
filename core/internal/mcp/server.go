@@ -206,6 +206,7 @@ type statsOutput struct {
 	OK            int          `json:"ok_2xx_3xx"`
 	ClientErrors  int          `json:"client_errors_4xx"`
 	ServerErrors  int          `json:"server_errors_5xx"`
+	FailedJobs    int          `json:"failed_jobs"`
 	WithException int          `json:"with_exception"`
 	WithNPlusOne  int          `json:"with_n_plus_one"`
 	Slow          int          `json:"slow"`
@@ -230,6 +231,12 @@ func (h *handlers) getStats(_ context.Context, _ *sdk.CallToolRequest, _ emptyIn
 	for i := range reqs {
 		r := &reqs[i]
 		switch {
+		case r.Kind == model.KindJob:
+			if r.Error {
+				out.FailedJobs++
+			} else {
+				out.OK++
+			}
 		case r.StatusCode >= 500:
 			out.ServerErrors++
 		case r.StatusCode >= 400:
@@ -268,6 +275,8 @@ func (h *handlers) getStats(_ context.Context, _ *sdk.CallToolRequest, _ emptyIn
 // issueLabel names what's wrong with a request for the stats list, or "" if it looks clean.
 func issueLabel(r *model.Request, hasExc, hasNPlusOne, isSlow bool) string {
 	switch {
+	case r.Kind == model.KindJob && r.Error:
+		return "job failed"
 	case r.StatusCode >= 500 && hasExc:
 		return fmt.Sprintf("%d + exception", r.StatusCode)
 	case r.StatusCode >= 500:
@@ -289,6 +298,8 @@ func statsHint(o statsOutput) string {
 		return "Nothing recorded yet. Run the app under `rewynd run <cmd>`, trigger an endpoint, then call wait_for_request."
 	case o.ServerErrors > 0:
 		return "There are server errors. Call get_last_error, or diagnose the 5xx ids listed in problems."
+	case o.FailedJobs > 0:
+		return "A background job/consumer failed. Diagnose the 'job failed' ids listed in problems."
 	case len(o.Problems) > 0:
 		return "No 5xx, but some requests are flagged (N+1 / slow / exception). Call diagnose on the problem ids."
 	default:

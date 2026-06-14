@@ -5,6 +5,7 @@ CREATE TABLE IF NOT EXISTS requests (
   id           TEXT PRIMARY KEY,
   trace_id     TEXT NOT NULL,
   service      TEXT,
+  kind         TEXT,
   method       TEXT,
   path         TEXT,
   route        TEXT,

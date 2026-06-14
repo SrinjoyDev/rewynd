@@ -152,7 +152,10 @@ func classify(kind tracepb.Span_SpanKind, m map[string]any) model.SpanType {
 		if hasHTTP(m) {
 			return model.SpanHTTPServer
 		}
-	case tracepb.Span_SPAN_KIND_CLIENT:
+		return model.SpanConsumer // a non-HTTP server (e.g. RPC) is still a request root
+	case tracepb.Span_SPAN_KIND_CONSUMER:
+		return model.SpanConsumer // a queue/job consumer — a flow with no HTTP root
+	case tracepb.Span_SPAN_KIND_CLIENT, tracepb.Span_SPAN_KIND_PRODUCER:
 		if hasHTTP(m) {
 			return model.SpanHTTPClient
 		}

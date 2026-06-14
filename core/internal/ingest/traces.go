@@ -64,7 +64,8 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 		DurationMs: durationMs(started, ended), Status: statusString(sp.Status), Attributes: attrs,
 	})
 
-	if typ == model.SpanHTTPServer {
+	switch typ {
+	case model.SpanHTTPServer:
 		method := firstAttr(attrs, "http.method", "http.request.method")
 		route := firstAttr(attrs, "http.route")
 		path := firstAttr(attrs, "url.path", "http.target")
@@ -74,7 +75,7 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 		status := firstAttrInt(attrs, "http.status_code", "http.response.status_code")
 		req := model.Request{
 			ID: traceID, SchemaVersion: model.SchemaVersion, TraceID: traceID, Service: service,
-			Method: method, Path: path, Route: route, StatusCode: status,
+			Kind: model.KindHTTP, Method: method, Path: path, Route: route, StatusCode: status,
 			StartedAt: started, EndedAt: ended, DurationMs: durationMs(started, ended),
 			Error: statusErr || status >= 500,
 		}
@@ -87,6 +88,15 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 			req.Response = &model.HTTPPayload{Headers: h}
 		}
 		b.Requests = append(b.Requests, req)
+	case model.SpanConsumer:
+		// A queue/job consumer (or RPC server) — a flow with no HTTP root. Label it from the
+		// messaging/RPC attributes, falling back to the span name.
+		b.Requests = append(b.Requests, model.Request{
+			ID: traceID, SchemaVersion: model.SchemaVersion, TraceID: traceID, Service: service,
+			Kind: model.KindJob, Method: jobOperation(attrs), Path: jobLabel(attrs, sp.Name),
+			StartedAt: started, EndedAt: ended, DurationMs: durationMs(started, ended),
+			Error: statusErr,
+		})
 	}
 
 	for _, ev := range sp.Events {
@@ -109,6 +119,28 @@ func resourceService(r *resourcepb.Resource) string {
 		return ""
 	}
 	return firstAttr(attrsToMap(r.Attributes), "service.name")
+}
+
+// jobOperation labels what a non-HTTP flow did: the messaging operation or RPC method.
+func jobOperation(m map[string]any) string {
+	if op := firstAttr(m, "messaging.operation.name", "messaging.operation.type", "messaging.operation"); op != "" {
+		return op
+	}
+	if rpc := firstAttr(m, "rpc.method"); rpc != "" {
+		return rpc
+	}
+	return "JOB"
+}
+
+// jobLabel names the flow: the queue/topic it consumed, the RPC service, or the span name.
+func jobLabel(m map[string]any, spanName string) string {
+	if d := firstAttr(m, "messaging.destination.name", "messaging.destination", "messaging.source.name"); d != "" {
+		return d
+	}
+	if svc := firstAttr(m, "rpc.service"); svc != "" {
+		return svc
+	}
+	return spanName
 }
 
 func durationMs(start, end int64) float64 {
