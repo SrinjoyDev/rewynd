@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"os"
 
-	"github.com/SrinjoyDev/rewynd/internal/cli"
+	"github.com/SrinjoyDev/rewynd/core/internal/cli"
 )
 
 // version is overridden at release time via -ldflags.

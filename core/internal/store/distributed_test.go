@@ -9,8 +9,8 @@ import (
 	resourcepb "go.opentelemetry.io/proto/otlp/resource/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 
-	"github.com/SrinjoyDev/rewynd/internal/ingest"
-	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/core/internal/ingest"
+	"github.com/SrinjoyDev/rewynd/core/internal/store"
 )
 
 // TestDistributedTraceStitching simulates a gateway calling a downstream service in one trace,

@@ -1,4 +1,4 @@
-module github.com/SrinjoyDev/rewynd
+module github.com/SrinjoyDev/rewynd/core
 
 go 1.25.0
 

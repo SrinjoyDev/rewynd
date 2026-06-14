@@ -6,7 +6,7 @@ import (
 	"fmt"
 	"sort"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 // DefaultNPlusOneThreshold is the minimum count of identical normalized statements within

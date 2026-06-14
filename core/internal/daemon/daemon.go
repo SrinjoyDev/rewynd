@@ -11,9 +11,9 @@ import (
 	"path/filepath"
 	"time"
 
-	"github.com/SrinjoyDev/rewynd/internal/config"
-	"github.com/SrinjoyDev/rewynd/internal/otlp"
-	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/core/internal/config"
+	"github.com/SrinjoyDev/rewynd/core/internal/otlp"
+	"github.com/SrinjoyDev/rewynd/core/internal/store"
 )
 
 type Options struct {

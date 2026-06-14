@@ -7,8 +7,8 @@ import (
 
 	"github.com/charmbracelet/lipgloss"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
-	"github.com/SrinjoyDev/rewynd/internal/stats"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/stats"
 )
 
 var (

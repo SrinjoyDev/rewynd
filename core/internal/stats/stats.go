@@ -6,7 +6,7 @@ package stats
 import (
 	"sort"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 type Percentiles struct {

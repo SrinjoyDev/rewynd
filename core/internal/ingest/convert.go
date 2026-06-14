@@ -13,7 +13,7 @@ import (
 	commonpb "go.opentelemetry.io/proto/otlp/common/v1"
 	tracepb "go.opentelemetry.io/proto/otlp/trace/v1"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 func anyValue(v *commonpb.AnyValue) any {

@@ -5,7 +5,7 @@ package diag
 import (
 	"strings"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 type Problem struct {

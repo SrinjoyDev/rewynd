@@ -14,7 +14,7 @@ import (
 	"google.golang.org/grpc"
 	"google.golang.org/grpc/credentials/insecure"
 
-	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/core/internal/store"
 )
 
 // TestGRPCExportLandsInStore drives the real gRPC path: it serves the OTLP/gRPC server, exports

@@ -9,8 +9,8 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/SrinjoyDev/rewynd/internal/detect"
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/detect"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 	_ "modernc.org/sqlite"
 )
 

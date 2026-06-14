@@ -3,7 +3,7 @@ package stats
 import (
 	"testing"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 func TestComputeAggregates(t *testing.T) {

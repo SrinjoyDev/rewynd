@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
 )
 
 func TestViewRendersNPlusOne(t *testing.T) {

@@ -9,11 +9,11 @@ import (
 
 	sdk "github.com/modelcontextprotocol/go-sdk/mcp"
 
-	"github.com/SrinjoyDev/rewynd/internal/config"
-	"github.com/SrinjoyDev/rewynd/internal/diag"
-	"github.com/SrinjoyDev/rewynd/internal/model"
-	"github.com/SrinjoyDev/rewynd/internal/stats"
-	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/core/internal/config"
+	"github.com/SrinjoyDev/rewynd/core/internal/diag"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/stats"
+	"github.com/SrinjoyDev/rewynd/core/internal/store"
 )
 
 // instructions are sent to the client on connect. They teach an agent the whole debugging

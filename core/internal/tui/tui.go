@@ -7,8 +7,8 @@ import (
 
 	tea "github.com/charmbracelet/bubbletea"
 
-	"github.com/SrinjoyDev/rewynd/internal/model"
-	"github.com/SrinjoyDev/rewynd/internal/store"
+	"github.com/SrinjoyDev/rewynd/core/internal/model"
+	"github.com/SrinjoyDev/rewynd/core/internal/store"
 )
 
 func Run(st *store.Store) error {
