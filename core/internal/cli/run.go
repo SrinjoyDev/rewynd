@@ -90,7 +90,7 @@ func ensureDaemon() error {
 		return err
 	}
 	c := exec.Command(self, "serve")
-	c.SysProcAttr = &syscall.SysProcAttr{Setsid: true}
+	detachSysProcAttr(c) // platform-specific: own session/process group so the core outlives us
 	if err := c.Start(); err != nil {
 		return fmt.Errorf("start core: %w", err)
 	}
