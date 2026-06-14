@@ -5,6 +5,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 
 ## [Unreleased]
 
+### Added
+
+- **`rewynd export <id>`** — render a request's full correlated trace as a single
+  self-contained HTML file (`-o trace.html`, or stdout). Attach it to a PR, drop it in CI, or
+  send it to a teammate; no rewynd needed to open it.
+- **Agent-value benchmark** (`bench/agent-eval/`) — a reproducible eval showing a coding agent
+  finds the root cause more reliably with the recorded trace than with only the source and
+  logs (4/4 vs 3/4; correct *and confident* 4/4 vs 2/4). Includes the tasks, an OTLP seeder
+  (`core/cmd/eval-seed`), the grader, and results.
+
+### Improved
+
+- `rewynd diagnose` now also reports **failed outbound calls** (any that errored or returned
+  ≥400) and **DB queries that errored**, not just detections and exceptions. A 5xx caused by an
+  upstream failure (e.g. a 502 from an outbound 500) no longer comes back as "no problems
+  detected."
+
 ## [0.2.1] - 2026-06-14
 
 ### Fixed
