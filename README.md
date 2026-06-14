@@ -39,7 +39,10 @@ happened. No `console.log`, no re-running.
 ## Install
 
 ```bash
-# macOS / Linux — grab the binary (recommended):
+# npm (the CLI + the Node capture shim) — the command it installs is `rewynd`:
+npm i -D @rewynd/cli
+
+# …or grab the binary directly (macOS / Linux):
 curl -fsSL https://raw.githubusercontent.com/SrinjoyDev/rewynd/main/scripts/install.sh | sh
 
 # …or with Go:
@@ -49,9 +52,9 @@ go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest
 Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases),
 or build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
 
-> **npm + PyPI** publishing (`npm i -D @rewynd/cli`, `pip install rewynd`) is wired into the
-> release workflow and flips on with the next tagged release once the registry tokens are
-> configured. Until then, use the binary installer or `go install` above.
+> The npm package is **`@rewynd/cli`** (npm reserves the bare `rewynd` name); the installed
+> command is still `rewynd`. **PyPI** (`pip install rewynd`) publishing is wired and turns on
+> once the PyPI token is configured.
 
 ## The problem
 
