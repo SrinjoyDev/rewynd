@@ -8,6 +8,16 @@ importers:
 
   .: {}
 
+  bench:
+    dependencies:
+      express:
+        specifier: ^4.21.2
+        version: 4.22.2
+    devDependencies:
+      '@rewynd/shim':
+        specifier: workspace:*
+        version: link:../packages/shim-node
+
   examples/express-postgres:
     dependencies:
       express:

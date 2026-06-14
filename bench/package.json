@@ -1,0 +1,16 @@
+{
+  "name": "@rewynd/bench",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Shim-overhead benchmark — gates the request hot-path cost in CI.",
+  "scripts": {
+    "bench": "node overhead.mjs"
+  },
+  "dependencies": {
+    "express": "^4.21.2"
+  },
+  "devDependencies": {
+    "@rewynd/shim": "workspace:*"
+  }
+}
