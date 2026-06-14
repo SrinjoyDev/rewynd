@@ -710,15 +710,31 @@ func printRequestDetail(r *model.Request) {
 	}
 	if len(r.Queries) > 0 {
 		fmt.Printf("\nQUERIES (%d)\n", len(r.Queries))
-		for _, q := range r.Queries {
-			fmt.Printf("  %7s  %s%s\n", dur(q.DurationMs), oneLine(q.Statement), svcSuffix(q.Service, multi))
-		}
+		collapse(r.Queries,
+			func(q model.Query) string { return q.Service + "\x00" + normStmt(q) },
+			func(start, n int) {
+				q := r.Queries[start]
+				if n == 1 {
+					fmt.Printf("  %7s  %s%s\n", dur(q.DurationMs), oneLine(q.Statement), svcSuffix(q.Service, multi))
+					return
+				}
+				total := sumDur(r.Queries[start:start+n], func(q model.Query) float64 { return q.DurationMs })
+				fmt.Printf("  %7s  %s   ×%d (avg %s)%s\n", dur(total), oneLine(normStmt(q)), n, dur(total/float64(n)), svcSuffix(q.Service, multi))
+			})
 	}
 	if len(r.Outbound) > 0 {
 		fmt.Printf("\nOUTBOUND (%d)\n", len(r.Outbound))
-		for _, o := range r.Outbound {
-			fmt.Printf("  %7s  %s %s -> %d%s\n", dur(o.DurationMs), o.Method, o.URL, o.StatusCode, svcSuffix(o.Service, multi))
-		}
+		collapse(r.Outbound,
+			func(o model.Outbound) string { return fmt.Sprintf("%s\x00%s %s\x00%d", o.Service, o.Method, o.URL, o.StatusCode) },
+			func(start, n int) {
+				o := r.Outbound[start]
+				if n == 1 {
+					fmt.Printf("  %7s  %s %s -> %d%s\n", dur(o.DurationMs), o.Method, o.URL, o.StatusCode, svcSuffix(o.Service, multi))
+					return
+				}
+				total := sumDur(r.Outbound[start:start+n], func(o model.Outbound) float64 { return o.DurationMs })
+				fmt.Printf("  %7s  %s %s -> %d   ×%d (avg %s)%s\n", dur(total), o.Method, o.URL, o.StatusCode, n, dur(total/float64(n)), svcSuffix(o.Service, multi))
+			})
 	}
 	if len(r.Logs) > 0 {
 		fmt.Printf("\nLOGS (%d)\n", len(r.Logs))
@@ -729,7 +745,11 @@ func printRequestDetail(r *model.Request) {
 	if len(r.Exceptions) > 0 {
 		fmt.Printf("\nEXCEPTIONS (%d)\n", len(r.Exceptions))
 		for _, e := range r.Exceptions {
-			fmt.Printf("  %s: %s\n", e.Type, oneLine(e.Message))
+			if e.Type != "" {
+				fmt.Printf("  %s: %s\n", e.Type, oneLine(e.Message))
+			} else {
+				fmt.Printf("  %s\n", oneLine(e.Message))
+			}
 		}
 	}
 }
@@ -752,6 +772,37 @@ func svcSuffix(service string, multi bool) string {
 		return "  [" + service + "]"
 	}
 	return ""
+}
+
+// collapse walks xs in order and invokes emit once per maximal run of consecutive items that
+// share key(item), passing the run's start index and length. It lets `show` fold an N+1's
+// repeated queries — or a loop's repeated outbound calls — into one "×N" line while keeping
+// every distinct step in its original place, so a 200-query request stays readable.
+func collapse[T any](xs []T, key func(T) string, emit func(start, n int)) {
+	for i := 0; i < len(xs); {
+		j := i + 1
+		for j < len(xs) && key(xs[j]) == key(xs[i]) {
+			j++
+		}
+		emit(i, j-i)
+		i = j
+	}
+}
+
+// normStmt is the params-stripped statement (the N+1 group key); falls back to the raw text.
+func normStmt(q model.Query) string {
+	if q.StatementNormalized != "" {
+		return q.StatementNormalized
+	}
+	return q.Statement
+}
+
+func sumDur[T any](xs []T, f func(T) float64) float64 {
+	var s float64
+	for _, x := range xs {
+		s += f(x)
+	}
+	return s
 }
 
 func flags(r model.Request) string {

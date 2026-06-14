@@ -31,7 +31,17 @@ func Diagnose(r *model.Request) []Problem {
 			continue
 		}
 		seen[key] = true
-		ps = append(ps, Problem{"exception", strings.TrimSpace(e.Type + ": " + oneLine(e.Message)), firstLine(e.Stack)})
+		summary := oneLine(e.Message)
+		if e.Type != "" {
+			summary = e.Type + ": " + summary
+		}
+		// Show the top stack frame as the "where", but not when the stack is just the error
+		// message repeated (DB drivers often carry no real frame).
+		hint := firstLine(e.Stack)
+		if strings.Contains(hint, oneLine(e.Message)) {
+			hint = ""
+		}
+		ps = append(ps, Problem{"exception", summary, hint})
 	}
 	// A failed outbound call is often the real cause of a 5xx the local code never threw.
 	for _, o := range r.Outbound {

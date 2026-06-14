@@ -88,8 +88,7 @@ DETECTIONS
 
 QUERIES (11)
       2ms  SELECT id, name FROM users ORDER BY id
-      1ms  SELECT id, title FROM posts WHERE user_id = $1
-      …  ×10  (the N+1, obvious at a glance)
+     18ms  SELECT id, title FROM posts WHERE user_id = ?   ×10 (avg 1.8ms)
 
 LOGS (2)
   [info] listing users
