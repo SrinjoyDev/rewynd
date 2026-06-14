@@ -1,5 +1,5 @@
 {
-  "name": "rewynd",
+  "name": "@rewynd/cli",
   "version": "0.1.0",
   "description": "A zero-config, OTLP-native flight recorder for your backend — a beautiful TUI, a JSON CLI, and an MCP server your coding agent can drive.",
   "keywords": ["opentelemetry", "observability", "tui", "cli", "mcp", "debugging", "devtools", "otlp"],

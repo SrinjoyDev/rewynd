@@ -20,7 +20,7 @@ So for any language whose OpenTelemetry instrumentation reads those variables (m
 
 | Language | Setup |
 |---|---|
-| **Node.js** | `npm i -D rewynd`, then `rewynd run <dev cmd>`. Zero code — auto-instruments http, pg/mysql, fetch/axios, pino/winston. |
+| **Node.js** | `npm i -D @rewynd/cli`, then `rewynd run <dev cmd>`. Zero code — auto-instruments http, pg/mysql, fetch/axios, pino/winston. |
 | **Python** | `pip install rewynd`, then `rewynd-run <cmd>`. Zero code — FastAPI/Flask/Django, psycopg2/SQLAlchemy, requests/httpx, logging. |
 | **Go** | `go get github.com/SrinjoyDev/rewynd/sdk/go`; `rewynd.Start(ctx)` + `otelhttp`/`otelsql`. Minimal code (Go has no runtime auto-instrumentation). See [`sdk/go`](../sdk/go/). |
 

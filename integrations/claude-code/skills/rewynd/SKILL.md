@@ -60,7 +60,7 @@ A request id prefix (first 8 chars) works anywhere an id is expected.
 
 ## Setup (if rewynd is not yet wired in)
 
-Install: `npm i -D rewynd` (Node) or `pip install rewynd` (Python), or
+Install: `npm i -D @rewynd/cli` (Node) or `pip install rewynd` (Python), or
 `curl -fsSL https://raw.githubusercontent.com/SrinjoyDev/rewynd/main/scripts/install.sh | sh`.
 
 Connect the MCP server (run once in the project):

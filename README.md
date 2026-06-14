@@ -49,7 +49,7 @@ go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest
 Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases),
 or build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
 
-> **npm + PyPI** publishing (`npm i -D rewynd`, `pip install rewynd`) is wired into the
+> **npm + PyPI** publishing (`npm i -D @rewynd/cli`, `pip install rewynd`) is wired into the
 > release workflow and flips on with the next tagged release once the registry tokens are
 > configured. Until then, use the binary installer or `go install` above.
 

@@ -103,7 +103,7 @@ Keep your original blog; replace the opening and trim the claims to what ships t
 
 ## Posting order
 
-1. Publish the packages (RELEASING.md) so `npm i -D rewynd` / `pip install rewynd` work.
+1. Publish the packages (RELEASING.md) so `npm i -D @rewynd/cli` / `pip install rewynd` work.
 2. Post the blog.
 3. Show HN (Tue–Thu morning ET tends to do best), then share the HN link on X/Reddit.
 4. Reply to every comment for the first few hours — engagement drives ranking.
