@@ -30,6 +30,9 @@ func (a app) View() string {
 	if a.width == 0 || a.height == 0 {
 		return "starting rewynd…"
 	}
+	if a.help {
+		return lipgloss.Place(a.width, a.height, lipgloss.Center, lipgloss.Center, helpBox())
+	}
 	bodyH := a.height - 2
 	if bodyH < 3 {
 		bodyH = 3
@@ -48,7 +51,7 @@ func (a app) View() string {
 	sep := dimStyle.Render(strings.TrimRight(strings.Repeat("│\n", bodyH), "\n"))
 	detailBox := lipgloss.NewStyle().Width(detailW).Height(bodyH).MaxHeight(bodyH).Render(a.renderDetail(detailW, bodyH))
 	body := lipgloss.JoinHorizontal(lipgloss.Top, listBox, sep, detailBox)
-	footer := footerStyle.Width(a.width).Render(" j/k move · f filter · e next error · c clear · q quit")
+	footer := footerStyle.Width(a.width).Render(" j/k move · f filter · e next error · c clear · ? help · q quit")
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, footer)
 }
 
@@ -200,6 +203,27 @@ func waterfall(r *model.Request, w int) []string {
 		out = append(out, fmt.Sprintf(" %-*s %s %s", labelW, truncate(queryLabel(q.Statement), labelW), bar, dimStyle.Render(durStr(q.DurationMs))))
 	}
 	return out
+}
+
+func helpBox() string {
+	keys := [][2]string{
+		{"j / ↓", "move down"},
+		{"k / ↑", "move up"},
+		{"g / G", "jump to top / bottom"},
+		{"f", "cycle status filter (2xx/4xx/5xx)"},
+		{"e", "jump to the next error"},
+		{"c", "clear the buffer"},
+		{"?", "toggle this help"},
+		{"q", "quit"},
+	}
+	var b strings.Builder
+	b.WriteString(lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render("rewynd · keys"))
+	b.WriteString("\n\n")
+	for _, k := range keys {
+		b.WriteString("  " + lipgloss.NewStyle().Foreground(cText).Bold(true).Render(fmt.Sprintf("%-7s", k[0])))
+		b.WriteString("  " + dimStyle.Render(k[1]) + "\n")
+	}
+	return lipgloss.NewStyle().Border(lipgloss.RoundedBorder()).BorderForeground(cMauve).Padding(1, 4).Render(strings.TrimRight(b.String(), "\n"))
 }
 
 func statusColor(c int) lipgloss.Color {

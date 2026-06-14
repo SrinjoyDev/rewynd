@@ -31,6 +31,16 @@ func TestViewRendersNPlusOne(t *testing.T) {
 	}
 }
 
+func TestHelpOverlay(t *testing.T) {
+	a := app{width: 100, height: 30, help: true}
+	out := a.View()
+	for _, want := range []string{"keys", "quit", "filter"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("help overlay missing %q", want)
+		}
+	}
+}
+
 func TestViewEmptyAndUnsized(t *testing.T) {
 	if got := (app{}).View(); !strings.Contains(got, "starting") {
 		t.Errorf("unsized view = %q", got)

@@ -24,6 +24,7 @@ type app struct {
 	detail        *model.Request
 	width, height int
 	filter        string
+	help          bool
 	err           error
 }
 
@@ -68,7 +69,17 @@ func (a app) Update(msg tea.Msg) (tea.Model, tea.Cmd) {
 }
 
 func (a app) key(k tea.KeyMsg) (tea.Model, tea.Cmd) {
+	if a.help {
+		if k.String() == "ctrl+c" {
+			return a, tea.Quit
+		}
+		a.help = false
+		return a, nil
+	}
 	switch k.String() {
+	case "?":
+		a.help = true
+		return a, nil
 	case "q", "ctrl+c":
 		return a, tea.Quit
 	case "j", "down":
