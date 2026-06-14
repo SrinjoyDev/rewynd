@@ -38,21 +38,19 @@ happened. No `console.log`, no re-running.
 ## Install
 
 ```bash
-# macOS / Linux — grab the binary:
+# macOS / Linux — grab the binary (recommended):
 curl -fsSL https://raw.githubusercontent.com/SrinjoyDev/rewynd/main/scripts/install.sh | sh
 
-# …or via npm (the CLI + the Node capture shim, one package):
-npm i -D rewynd
-
-# …or Go:
+# …or with Go:
 go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest
-
-# Python capture shim:
-pip install rewynd
 ```
 
 Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases),
 or build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
+
+> **npm + PyPI** publishing (`npm i -D rewynd`, `pip install rewynd`) is wired into the
+> release workflow and flips on with the next tagged release once the registry tokens are
+> configured. Until then, use the binary installer or `go install` above.
 
 ## The problem
 
@@ -191,10 +189,11 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] Header capture + redaction; outbound HTTP
 - [x] **Python** shim (FastAPI/Flask/Django) over the same core — the multi-language unlock
 - [x] Request/response body capture (redacted, size-capped)
-- [x] **v0.1.0** released: cross-platform binaries, `npm` + `PyPI` packages, install script
+- [x] **v0.1.0** released: cross-platform binaries + `curl | sh` installer + `go install`
 - [x] **Agent-native**: MCP instructions + `get_stats`; drop-in [integrations](./integrations/) for Claude Code, Cursor, Windsurf, OpenCode, Codex, Cline, Devin
-- [ ] TUI filtering + search; more examples (Nest, Next, Prisma)
-- [ ] gRPC OTLP intake; optional trace export
+- [x] TUI control panel: live search, slow filter, scrollable enriched detail
+- [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
+- [ ] More examples (Nest, Next, Prisma); gRPC OTLP intake; optional trace export
 
 ## Contributing
 
