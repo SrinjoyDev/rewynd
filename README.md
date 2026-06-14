@@ -11,9 +11,9 @@
 </p>
 
 **A zero-config, OTLP-native flight recorder for your backend.** It silently records every
-HTTP request, database query, outbound call, log line, and exception during local development,
-**correlates them per request**, and lets you — or your coding agent — see exactly what
-happened. No `console.log`, no re-running.
+request — and background job — your backend handles, with the database queries, outbound calls,
+logs, and exceptions each one caused, **correlated per request**, during local development. You
+— or your coding agent — see exactly what happened. No `console.log`, no re-running.
 
 <p align="center">
   <img src="demo/tui.gif" alt="rewynd TUI — live requests with the N+1 waterfall" width="100%">
@@ -25,9 +25,9 @@ happened. No `console.log`, no re-running.
   <img src="demo/agent-loop.gif" alt="rewynd agent loop — clear, trigger, watch, diagnose" width="100%">
 </p>
 
-> Laravel Telescope, reborn for Node — terminal-native, and the first backend recorder your
-> coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
-> entirely on your machine.
+> Laravel Telescope, reborn for the terminal and language-agnostic — the first backend recorder
+> your coding agent can actually drive. Works with any OpenTelemetry stack (Node, Python, Go,
+> Ruby, Java, …); OpenTelemetry under the hood, zero config on top. Runs entirely on your machine.
 
 > **v0.2.1 is live.** The core, the **TUI**, the CLI, the agent loop, the **MCP server**,
 > capture across **Node / Python / Go / Ruby / any OpenTelemetry language**, distributed
