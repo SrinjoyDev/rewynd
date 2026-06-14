@@ -116,9 +116,9 @@ Drop this into your Claude Code / Cursor MCP config:
 }
 ```
 
-Tools: `get_stats`, `list_requests`, `get_request`, `wait_for_request`, `diagnose`,
-`get_last_error`, `clear`. The server also sends the whole debugging protocol as MCP
-instructions on connect, so the agent knows *when* and *how* to use them.
+Tools: `get_stats`, `get_load_stats`, `list_requests`, `get_request`, `wait_for_request`,
+`diagnose`, `get_last_error`, `clear`. The server also sends the whole debugging protocol as
+MCP instructions on connect, so the agent knows *when* and *how* to use them.
 
 **Ready-made integrations** for Claude Code (skill + MCP), Cursor (rules + MCP), Windsurf,
 OpenCode, Codex, Cline, and Devin live in [`integrations/`](./integrations/) — drop the right
@@ -142,6 +142,7 @@ file into your project and any agent learns the `clear → trigger → watch →
 | `rewynd run <cmd>` | Run your dev command with recording on (auto-starts the core) |
 | `rewynd ls` | List requests (`--status 5xx`, `--slow`, `--has-error`, `--path`, `--json`) |
 | `rewynd show <id>` | Full correlated trace for one request (`--json`) |
+| `rewynd stats` | Load summary: throughput, latency p50/p95/p99, error rate, by endpoint (`--json`) |
 | `rewynd watch` | Block until a matching request is recorded, then print it (`--json`) |
 | `rewynd tail` | Stream requests as they arrive |
 | `rewynd diagnose <id>` | Summarize what's wrong (N+1, exceptions, slow queries) |
@@ -206,8 +207,9 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] **OTLP/gRPC** intake (:4317) alongside HTTP — most SDKs default to gRPC
 - [x] **Distributed traces**: multi-service stitching with per-service attribution
 - [x] **Background jobs / queue consumers** recorded as first-class flows (not just HTTP)
+- [x] **Load view**: `rewynd stats` + `get_load_stats` + TUI `S` panel (throughput, p50/p95/p99, error rate, by endpoint)
 - [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
-- [ ] A load / trends view (throughput, p95, error rate over a run); more examples
+- [ ] Run-vs-run comparison (regression diffs); more framework examples (Nest, Next, Prisma)
 
 ## Contributing
 

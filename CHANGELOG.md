@@ -24,6 +24,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   queue consumer, worker, or cron — any OTel consumer/RPC span) is recorded with its
   correlated queries, outbound calls, logs, and exceptions, and an ok/fail outcome. Shown
   across the TUI, CLI, and MCP. See `examples/jobs/`.
+- **Load / performance view**: `rewynd stats` (and the MCP `get_load_stats` tool, and the
+  TUI `S` panel) report throughput, latency percentiles (p50/p95/p99/max), error rate, and a
+  per-endpoint breakdown ranked worst-first — for humans and agents to spot the slow or
+  erroring endpoint and compare before/after a change.
 - **Agent-native** integrations: connect-time MCP instructions, a `get_stats` orientation
   tool, richer tool descriptions, and drop-in setups under `integrations/` for Claude Code,
   Cursor, Windsurf, OpenCode, Codex, Cline, and Devin.
