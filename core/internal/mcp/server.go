@@ -12,6 +12,7 @@ import (
 	"github.com/SrinjoyDev/rewynd/internal/config"
 	"github.com/SrinjoyDev/rewynd/internal/diag"
 	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/stats"
 	"github.com/SrinjoyDev/rewynd/internal/store"
 )
 
@@ -54,6 +55,11 @@ func RunStdio(ctx context.Context, st *store.Store, version string) error {
 			"short list of the broken/flagged requests (id, method, path, status, what's wrong) newest " +
 			"first. Call this first to orient yourself, then jump straight to diagnose or get_request " +
 			"on the ids it surfaces. Takes no arguments."}, h.getStats)
+	sdk.AddTool(s, &sdk.Tool{Name: "get_load_stats",
+		Description: "Get a load/performance summary over the recorded window: throughput (req/s), latency " +
+			"percentiles (p50/p95/p99/max), error rate, and a per-endpoint breakdown ranked worst-first " +
+			"(error rate, p95, count, N+1 flag). Use this to answer \"how is it performing\", \"which endpoint " +
+			"is slow or erroring\", or to compare before/after a change. Takes no arguments."}, h.getLoadStats)
 	sdk.AddTool(s, &sdk.Tool{Name: "list_requests",
 		Description: "List recorded backend requests, newest first, each with method, path, status, " +
 			"duration, and per-request counts (queries / outbound / logs / exceptions). Filter to narrow " +
@@ -189,6 +195,14 @@ func (h *handlers) clear(_ context.Context, _ *sdk.CallToolRequest, _ emptyInput
 		return nil, clearOutput{}, err
 	}
 	return nil, clearOutput{Cleared: true}, nil
+}
+
+func (h *handlers) getLoadStats(_ context.Context, _ *sdk.CallToolRequest, _ emptyInput) (*sdk.CallToolResult, stats.Stats, error) {
+	reqs, err := h.st.ListRequests(store.ListOptions{Limit: config.MaxRequests()})
+	if err != nil {
+		return nil, stats.Stats{}, err
+	}
+	return nil, stats.Compute(reqs), nil
 }
 
 // problemRef is a one-line pointer to a broken or flagged request in the stats overview.

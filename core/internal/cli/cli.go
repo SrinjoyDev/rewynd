@@ -22,6 +22,7 @@ import (
 	"github.com/SrinjoyDev/rewynd/internal/diag"
 	"github.com/SrinjoyDev/rewynd/internal/mcp"
 	"github.com/SrinjoyDev/rewynd/internal/model"
+	"github.com/SrinjoyDev/rewynd/internal/stats"
 	"github.com/SrinjoyDev/rewynd/internal/store"
 	"github.com/SrinjoyDev/rewynd/internal/tui"
 )
@@ -45,6 +46,7 @@ func newRoot(version string) *cobra.Command {
 		statusCmd(),
 		lsCmd(),
 		showCmd(),
+		statsCmd(),
 		diagnoseCmd(),
 		lastErrorCmd(),
 		tailCmd(),
@@ -138,6 +140,39 @@ func lsCmd() *cobra.Command {
 		},
 	}
 	addListFlags(cmd)
+	cmd.Flags().Bool("json", false, "machine-readable output")
+	return cmd
+}
+
+func statsCmd() *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "stats",
+		Short: "Load/performance summary: throughput, latency percentiles, error rate, by endpoint",
+		RunE: func(cmd *cobra.Command, _ []string) error {
+			asJSON, _ := cmd.Flags().GetBool("json")
+			last, _ := cmd.Flags().GetInt("last")
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			limit := last
+			if limit <= 0 {
+				limit = config.MaxRequests()
+			}
+			reqs, err := st.ListRequests(store.ListOptions{Limit: limit})
+			if err != nil {
+				return err
+			}
+			s := stats.Compute(reqs)
+			if asJSON {
+				return printJSON(s)
+			}
+			printStats(s)
+			return nil
+		},
+	}
+	cmd.Flags().Int("last", 0, "summarize only the last N flows (default: the whole buffer)")
 	cmd.Flags().Bool("json", false, "machine-readable output")
 	return cmd
 }
@@ -451,6 +486,43 @@ func printRequestTable(reqs []model.Request) {
 		fmt.Fprintf(tw, "%s\t%s\t%s\t%s\t%s\t%d\t%s\n",
 			shortID(r.ID), r.Method, r.Path, statusCell(r),
 			dur(r.DurationMs), r.Counts.Queries, flags(r))
+	}
+	tw.Flush()
+}
+
+func printStats(s stats.Stats) {
+	if s.Total == 0 {
+		fmt.Fprintln(os.Stderr, "no flows recorded")
+		return
+	}
+	window := ""
+	if s.WindowMs > 0 {
+		window = fmt.Sprintf(" over %s — %.1f req/s", dur(s.WindowMs), s.ReqPerSec)
+	}
+	fmt.Printf("%d flows%s\n", s.Total, window)
+	fmt.Printf("latency   p50 %s   p95 %s   p99 %s   max %s\n",
+		dur(s.Latency.P50), dur(s.Latency.P95), dur(s.Latency.P99), dur(s.Latency.Max))
+	fmt.Printf("errors    %.1f%% (%d)   5xx %d   4xx %d   failed jobs %d\n",
+		s.ErrorRate*100, s.Errors, s.ServerErrors, s.ClientErrors, s.FailedJobs)
+	fmt.Printf("issues    N+1 in %d   slow %d\n", s.NPlusOne, s.Slow)
+
+	if len(s.Endpoints) == 0 {
+		return
+	}
+	fmt.Println("\nBY ENDPOINT (worst first)")
+	tw := tabwriter.NewWriter(os.Stdout, 0, 2, 2, ' ', 0)
+	fmt.Fprintln(tw, "ERRORS\tP95\tMAX\tCOUNT\tENDPOINT")
+	for i, e := range s.Endpoints {
+		if i >= 15 {
+			fmt.Fprintf(tw, "\t\t\t\t… +%d more\n", len(s.Endpoints)-i)
+			break
+		}
+		flag := ""
+		if e.NPlusOne {
+			flag = "  [N+1]"
+		}
+		fmt.Fprintf(tw, "%.0f%%\t%s\t%s\t%d\t%s %s%s\n",
+			e.ErrorRate*100, dur(e.P95Ms), dur(e.MaxMs), e.Count, e.Method, e.Route, flag)
 	}
 	tw.Flush()
 }
