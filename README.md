@@ -124,14 +124,15 @@ instructions on connect, so the agent knows *when* and *how* to use them.
 OpenCode, Codex, Cline, and Devin live in [`integrations/`](./integrations/) — drop the right
 file into your project and any agent learns the `clear → trigger → watch → read → fix` loop.
 
-## What it captures, correlated per request
+## What it captures, correlated per flow
 
 | | |
 |---|---|
 | **HTTP requests** | method, path, status, timing |
+| **Background jobs** | queue consumers, workers, cron — recorded as first-class flows, ok/fail ([example](./examples/jobs/)) |
 | **DB queries** | SQL + params + duration, with **N+1 detection** |
 | **Outbound calls** | method, URL, status, duration |
-| **Logs** | `console` / `pino` / `winston`, stamped with the request's trace |
+| **Logs** | `console` / `pino` / `winston`, stamped with the flow's trace |
 | **Exceptions** | type, message, stack |
 
 ## Commands
@@ -204,8 +205,9 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] TUI control panel: live search, slow filter, scrollable enriched detail
 - [x] **OTLP/gRPC** intake (:4317) alongside HTTP — most SDKs default to gRPC
 - [x] **Distributed traces**: multi-service stitching with per-service attribution
+- [x] **Background jobs / queue consumers** recorded as first-class flows (not just HTTP)
 - [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
-- [ ] More examples (Nest, Next, Prisma); optional trace export
+- [ ] A load / trends view (throughput, p95, error rate over a run); more examples
 
 ## Contributing
 

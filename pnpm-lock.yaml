@@ -83,6 +83,15 @@ importers:
         specifier: ^5.7.2
         version: 5.9.3
 
+  examples/jobs:
+    devDependencies:
+      '@opentelemetry/api':
+        specifier: 1.9.1
+        version: 1.9.1
+      '@rewynd/shim':
+        specifier: workspace:*
+        version: link:../../packages/shim-node
+
   packages/cli:
     dependencies:
       '@rewynd/shim':

@@ -20,6 +20,10 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   one trace, the entry service is the canonical root (earliest server span, regardless of
   export order), and every query / outbound / log is attributed to the service it ran in.
   See `examples/distributed/`.
+- **Background jobs / queue consumers** as first-class flows: work with no HTTP root (a
+  queue consumer, worker, or cron — any OTel consumer/RPC span) is recorded with its
+  correlated queries, outbound calls, logs, and exceptions, and an ok/fail outcome. Shown
+  across the TUI, CLI, and MCP. See `examples/jobs/`.
 - **Agent-native** integrations: connect-time MCP instructions, a `get_stats` orientation
   tool, richer tool descriptions, and drop-in setups under `integrations/` for Claude Code,
   Cursor, Windsurf, OpenCode, Codex, Cline, and Devin.
@@ -31,6 +35,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 - Request header + body capture with **in-app redaction**; outbound HTTP capture.
 - Configurable retention via `REWYND_MAX_REQUESTS` (default 1000).
 - Privacy: binds `127.0.0.1`, no telemetry, a hard production guard.
+
+### Fixed
+
+- The Node shim now flushes recorded spans on normal process exit (`beforeExit`), not only on
+  SIGTERM/SIGINT — so short-lived workers, scripts, and one-off jobs no longer lose their data.
 - Distribution: cross-platform binaries (goreleaser), `rewynd` on **npm** (per-platform
   binary via `optionalDependencies`) and **PyPI**, plus a `curl | sh` installer and a
   tag-driven release workflow.

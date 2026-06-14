@@ -1,0 +1,11 @@
+{
+  "name": "rewynd-example-jobs",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "A background worker whose queue jobs rewynd records as first-class 'job' flows.",
+  "devDependencies": {
+    "@opentelemetry/api": "1.9.1",
+    "@rewynd/shim": "workspace:*"
+  }
+}
