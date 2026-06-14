@@ -21,6 +21,16 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
   const { OTLPLogExporter } = await import('@opentelemetry/exporter-logs-otlp-proto');
   const { BatchLogRecordProcessor } = await import('@opentelemetry/sdk-logs');
 
+  // Optional, version-safe instrumentations the user opted into. Prisma isn't in the auto
+  // set; Prisma users add `@prisma/instrumentation` (matching their Prisma) and we load it.
+  const extra = [];
+  for (const [pkg, exportName] of [['@prisma/instrumentation', 'PrismaInstrumentation']]) {
+    try {
+      const mod = await import(pkg);
+      if (mod[exportName]) extra.push(new mod[exportName]());
+    } catch {}
+  }
+
   // Headers are redacted here, inside your app — secrets never reach the core.
   const REDACT = new Set(['authorization', 'cookie', 'set-cookie', 'proxy-authorization', 'x-api-key', 'api-key']);
   const redactHeaders = (h) => {
@@ -56,6 +66,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
           },
         },
       }),
+      ...extra,
     ],
   });
   sdk.start();
