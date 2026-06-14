@@ -2,6 +2,7 @@ package tui
 
 import (
 	"fmt"
+	"sort"
 	"strings"
 
 	"github.com/charmbracelet/lipgloss"
@@ -137,6 +138,17 @@ func (a app) renderDetail(w, h int) string {
 		lines = append(lines, "", lipgloss.NewStyle().Foreground(cRed).Bold(true).Render(fmt.Sprintf(" EXCEPTIONS (%d)", len(r.Exceptions))))
 		for _, e := range dedupExc(r.Exceptions) {
 			lines = append(lines, " "+lipgloss.NewStyle().Foreground(cRed).Render(truncate(oneLine(e.Message), w-2)))
+		}
+	}
+	if r.Request != nil && len(r.Request.Headers) > 0 {
+		lines = append(lines, "", headStyle.Render(" REQUEST HEADERS"))
+		keys := make([]string, 0, len(r.Request.Headers))
+		for k := range r.Request.Headers {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			lines = append(lines, " "+dimStyle.Render(k+": ")+truncate(r.Request.Headers[k], maxi(4, w-len(k)-4)))
 		}
 	}
 	if len(lines) > h {

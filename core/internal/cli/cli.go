@@ -9,6 +9,7 @@ import (
 	"net"
 	"os"
 	"os/signal"
+	"sort"
 	"strings"
 	"syscall"
 	"text/tabwriter"
@@ -452,6 +453,17 @@ func printRequestTable(reqs []model.Request) {
 func printRequestDetail(r *model.Request) {
 	fmt.Printf("%s %s  ->  %d  (%s)\n", r.Method, r.Path, r.StatusCode, dur(r.DurationMs))
 	fmt.Printf("id %s   trace %s\n", shortID(r.ID), r.TraceID)
+	if r.Request != nil && len(r.Request.Headers) > 0 {
+		fmt.Println("\nREQUEST HEADERS")
+		keys := make([]string, 0, len(r.Request.Headers))
+		for k := range r.Request.Headers {
+			keys = append(keys, k)
+		}
+		sort.Strings(keys)
+		for _, k := range keys {
+			fmt.Printf("  %s: %s\n", k, oneLine(r.Request.Headers[k]))
+		}
+	}
 	if len(r.Detections) > 0 {
 		fmt.Println("\nDETECTIONS")
 		for _, d := range r.Detections {
