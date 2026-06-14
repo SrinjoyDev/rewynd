@@ -33,26 +33,32 @@ func (a app) View() string {
 	if a.help {
 		return lipgloss.Place(a.width, a.height, lipgloss.Center, lipgloss.Center, helpBox())
 	}
-	bodyH := a.height - 2
-	if bodyH < 3 {
-		bodyH = 3
-	}
-	listW := a.width * 2 / 5
-	if listW < 40 {
-		listW = 40
-	}
-	if listW > a.width-24 {
-		listW = maxi(24, a.width-24)
-	}
-	detailW := a.width - listW - 1
+	listW, detailW, bodyH := a.layout()
 
 	title := titleStyle.Width(a.width).Render(a.titleText())
 	listBox := lipgloss.NewStyle().Width(listW).Height(bodyH).MaxHeight(bodyH).Render(a.renderList(listW, bodyH))
 	sep := dimStyle.Render(strings.TrimRight(strings.Repeat("│\n", bodyH), "\n"))
 	detailBox := lipgloss.NewStyle().Width(detailW).Height(bodyH).MaxHeight(bodyH).Render(a.renderDetail(detailW, bodyH))
 	body := lipgloss.JoinHorizontal(lipgloss.Top, listBox, sep, detailBox)
-	footer := footerStyle.Width(a.width).Render(" j/k move · f filter · e next error · c clear · ? help · q quit")
+	footer := footerStyle.Width(a.width).MaxWidth(a.width).Render(a.footerText())
 	return lipgloss.JoinVertical(lipgloss.Left, title, body, footer)
+}
+
+// layout splits the screen into the list column, the detail column, and the body height.
+func (a app) layout() (listW, detailW, bodyH int) {
+	bodyH = a.height - 2
+	if bodyH < 3 {
+		bodyH = 3
+	}
+	listW = a.width * 2 / 5
+	if listW < 40 {
+		listW = 40
+	}
+	if listW > a.width-24 {
+		listW = maxi(24, a.width-24)
+	}
+	detailW = a.width - listW - 1
+	return
 }
 
 func (a app) titleText() string {
@@ -60,7 +66,25 @@ func (a app) titleText() string {
 	if f == "" {
 		f = "all"
 	}
-	return fmt.Sprintf(" rewynd · %d requests · filter %s ", len(a.reqs), f)
+	s := fmt.Sprintf(" rewynd · %d requests · %s", len(a.reqs), f)
+	if a.slowOnly {
+		s += " · slow"
+	}
+	if a.search != "" {
+		s += " · /" + a.search
+	}
+	return s + " "
+}
+
+func (a app) footerText() string {
+	if a.searching {
+		return " search /" + a.search + "█  (enter keep · esc clear)"
+	}
+	s := " j/k move · / search · f status · s slow · e error · ^d/^u scroll · c clear · ? help · q quit"
+	if lipgloss.Width(s) > a.width {
+		s = truncate(s, a.width)
+	}
+	return s
 }
 
 func (a app) renderList(w, h int) string {
@@ -113,34 +137,82 @@ func (a app) renderDetail(w, h int) string {
 	if a.detail == nil {
 		return dimStyle.Render("\n  select a request")
 	}
-	r := a.detail
+	lines := a.detailLines(a.detail, w)
+	if len(lines) <= h {
+		return strings.Join(lines, "\n")
+	}
+	// Scrollable: reserve the bottom line for a position indicator.
+	winH := h - 1
+	sc := clampi(a.detailScroll, 0, detailWindowMax(len(lines), h))
+	end := mini(sc+winH, len(lines))
+	win := append([]string{}, lines[sc:end]...)
+	arrows := " "
+	if sc > 0 {
+		arrows = lipgloss.NewStyle().Foreground(cMauve).Render("▲")
+	}
+	if end < len(lines) {
+		arrows += lipgloss.NewStyle().Foreground(cMauve).Render("▼")
+	} else {
+		arrows += " "
+	}
+	win = append(win, dimStyle.Render(fmt.Sprintf(" %s  %d–%d / %d", arrows, sc+1, end, len(lines))))
+	return strings.Join(win, "\n")
+}
+
+// detailWindowMax is the largest scroll offset, accounting for the reserved indicator line.
+func detailWindowMax(total, h int) int {
+	if total <= h {
+		return 0
+	}
+	return total - (h - 1)
+}
+
+// detailLines builds the full (unscrolled) detail view for one request, in debugging order:
+// what's wrong first (detections, exception), then how it ran (waterfall, outbound, logs),
+// then the raw payloads.
+func (a app) detailLines(r *model.Request, w int) []string {
 	sc := statusColor(r.StatusCode)
 	var lines []string
 	lines = append(lines,
 		lipgloss.NewStyle().Foreground(sc).Bold(true).Render(fmt.Sprintf(" %s %s", r.Method, truncate(r.Path, w-16)))+
 			dimStyle.Render(fmt.Sprintf("  %d · %s", r.StatusCode, durStr(r.DurationMs))))
-	lines = append(lines, dimStyle.Render(fmt.Sprintf(" trace %s", short(r.TraceID))))
+	lines = append(lines, dimStyle.Render(fmt.Sprintf(" trace %s · %dq %do %dl", short(r.TraceID), r.Counts.Queries, r.Counts.Outbound, r.Counts.Logs)))
 
 	if len(r.Detections) > 0 {
 		lines = append(lines, "", lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render(" DETECTIONS"))
 		for _, d := range r.Detections {
 			lines = append(lines, " "+lipgloss.NewStyle().Foreground(cMauve).Render("! ")+truncate(d.Title, w-4))
-		}
-	}
-	if wf := waterfall(r, w); len(wf) > 0 {
-		lines = append(lines, "", headStyle.Render(" WATERFALL"))
-		lines = append(lines, wf...)
-	}
-	if len(r.Logs) > 0 {
-		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" LOGS (%d)", len(r.Logs))))
-		for _, l := range r.Logs {
-			lines = append(lines, " "+logLevel(l.Level)+" "+truncate(oneLine(l.Message), w-9))
+			if d.Suggestion != "" {
+				lines = append(lines, "   "+dimStyle.Render(truncate(d.Suggestion, w-4)))
+			}
 		}
 	}
 	if len(r.Exceptions) > 0 {
 		lines = append(lines, "", lipgloss.NewStyle().Foreground(cRed).Bold(true).Render(fmt.Sprintf(" EXCEPTIONS (%d)", len(r.Exceptions))))
 		for _, e := range dedupExc(r.Exceptions) {
-			lines = append(lines, " "+lipgloss.NewStyle().Foreground(cRed).Render(truncate(oneLine(e.Message), w-2)))
+			head := e.Message
+			if e.Type != "" {
+				head = e.Type + ": " + e.Message
+			}
+			lines = append(lines, " "+lipgloss.NewStyle().Foreground(cRed).Render(truncate(oneLine(head), w-2)))
+		}
+	}
+	if wf := waterfall(r, w); len(wf) > 0 {
+		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" WATERFALL (%d queries)", len(r.Queries))))
+		lines = append(lines, wf...)
+	}
+	if len(r.Outbound) > 0 {
+		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" OUTBOUND (%d)", len(r.Outbound))))
+		for _, o := range r.Outbound {
+			status := lipgloss.NewStyle().Foreground(statusColor(o.StatusCode)).Render(fmt.Sprintf("%3d", o.StatusCode))
+			lines = append(lines, " "+status+" "+fmt.Sprintf("%-4s", o.Method)+" "+
+				truncate(o.URL, maxi(6, w-12))+" "+dimStyle.Render(durStr(o.DurationMs)))
+		}
+	}
+	if len(r.Logs) > 0 {
+		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" LOGS (%d)", len(r.Logs))))
+		for _, l := range r.Logs {
+			lines = append(lines, " "+logLevel(l.Level)+" "+truncate(oneLine(l.Message), w-9))
 		}
 	}
 	if r.Request != nil && len(r.Request.Headers) > 0 {
@@ -156,12 +228,29 @@ func (a app) renderDetail(w, h int) string {
 	}
 	if r.Request != nil && r.Request.Body != "" {
 		lines = append(lines, "", headStyle.Render(" REQUEST BODY"))
-		lines = append(lines, " "+truncate(oneLine(r.Request.Body), w-2))
+		lines = append(lines, bodyLines(r.Request.Body, w)...)
 	}
-	if len(lines) > h {
-		lines = lines[:h]
+	if r.Response != nil && r.Response.Body != "" {
+		lines = append(lines, "", headStyle.Render(" RESPONSE BODY"))
+		lines = append(lines, bodyLines(r.Response.Body, w)...)
 	}
-	return strings.Join(lines, "\n")
+	return lines
+}
+
+// bodyLines wraps a captured body across up to a few lines so longer JSON is readable.
+func bodyLines(body string, w int) []string {
+	s := oneLine(body)
+	width := maxi(8, w-2)
+	var out []string
+	for len(s) > 0 && len(out) < 6 {
+		n := mini(width, len(s))
+		out = append(out, " "+s[:n])
+		s = s[n:]
+	}
+	if len(s) > 0 {
+		out = append(out, " "+dimStyle.Render("…"))
+	}
+	return out
 }
 
 // waterfall renders each query as a positioned, duration-scaled bar — repeated identical
@@ -210,8 +299,12 @@ func helpBox() string {
 		{"j, down", "move down"},
 		{"k, up", "move up"},
 		{"g / G", "jump to top / bottom"},
+		{"/", "search by path (live)"},
 		{"f", "cycle status filter (2xx/4xx/5xx)"},
+		{"s", "toggle slow-only"},
 		{"e", "jump to the next error"},
+		{"^d / ^u", "scroll the detail pane"},
+		{"esc", "clear search / filter"},
 		{"c", "clear the buffer"},
 		{"?", "toggle this help"},
 		{"q", "quit"},

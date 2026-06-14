@@ -1,6 +1,7 @@
 package tui
 
 import (
+	"fmt"
 	"strings"
 	"testing"
 
@@ -48,5 +49,73 @@ func TestViewEmptyAndUnsized(t *testing.T) {
 	a := app{width: 100, height: 24}
 	if out := a.View(); !strings.Contains(out, "no requests yet") {
 		t.Errorf("empty view should prompt to hit an endpoint, got: %q", out)
+	}
+}
+
+func TestDetailRendersOutboundResponseAndSuggestion(t *testing.T) {
+	r := model.Request{
+		ID: "ab12cd34", TraceID: "ab12cd34", Method: "POST", Path: "/api/orders",
+		StatusCode: 200, DurationMs: 40, EndedAt: 40_000_000,
+		Detections: []model.Detection{{Type: model.DetectNPlusOne, Title: "N+1 query", Suggestion: "Batch into a single query"}},
+		Outbound:   []model.Outbound{{Method: "GET", URL: "https://api.example.com/rates", StatusCode: 200, DurationMs: 12}},
+		Response:   &model.HTTPPayload{Body: `{"ok":true}`},
+	}
+	a := app{width: 120, height: 60, reqs: []model.Request{r}, detail: &r}
+	out := strings.Join(a.detailLines(&r, 80), "\n")
+	for _, want := range []string{"OUTBOUND", "api.example.com/rates", "RESPONSE BODY", `{"ok":true}`, "Batch into a single query"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("detail missing %q", want)
+		}
+	}
+}
+
+func TestDetailScroll(t *testing.T) {
+	r := model.Request{ID: "scroll01", TraceID: "scroll01", Method: "GET", Path: "/x", StatusCode: 200}
+	for i := 0; i < 80; i++ {
+		r.Logs = append(r.Logs, model.Log{Level: "info", Message: fmt.Sprintf("log-line-%02d", i)})
+	}
+	a := app{width: 120, height: 20, reqs: []model.Request{r}, detail: &r}
+	_, detailW, bodyH := a.layout()
+	all := a.detailLines(&r, detailW)
+	if len(all) <= bodyH {
+		t.Fatalf("need a detail taller than the pane to test scrolling (%d <= %d)", len(all), bodyH)
+	}
+
+	top := a.renderDetail(detailW, bodyH)
+	if !strings.Contains(top, "log-line-00") || strings.Contains(top, "log-line-79") {
+		t.Errorf("at scroll 0 the top should show but not the bottom")
+	}
+	if !strings.Contains(top, "▼") {
+		t.Errorf("a scrollable detail should show the down indicator")
+	}
+
+	a.detailScroll = detailWindowMax(len(all), bodyH)
+	bottom := a.renderDetail(detailW, bodyH)
+	if !strings.Contains(bottom, "log-line-79") {
+		t.Errorf("scrolled to the end the last log should be visible")
+	}
+	if !strings.Contains(bottom, "▲") {
+		t.Errorf("at the bottom the up indicator should show")
+	}
+}
+
+func TestListOptsReflectsFilters(t *testing.T) {
+	o := app{filter: "5xx", search: "/api/users", slowOnly: true}.listOpts()
+	if o.StatusClass != "5xx" || o.PathLike != "/api/users" || !o.Slow {
+		t.Errorf("listOpts did not carry filters: %+v", o)
+	}
+}
+
+func TestFooterAndTitleReflectState(t *testing.T) {
+	searching := app{width: 120, height: 30, searching: true, search: "ord"}
+	if !strings.Contains(searching.footerText(), "search /ord") {
+		t.Errorf("searching footer should echo the query, got %q", searching.footerText())
+	}
+	filtered := app{width: 120, height: 30, filter: "5xx", slowOnly: true, search: "ord"}
+	title := filtered.titleText()
+	for _, want := range []string{"5xx", "slow", "/ord"} {
+		if !strings.Contains(title, want) {
+			t.Errorf("title missing %q, got %q", want, title)
+		}
 	}
 }
