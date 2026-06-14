@@ -1,0 +1,5 @@
+source 'https://rubygems.org'
+
+# Standard OpenTelemetry — nothing rewynd-specific. rewynd is just the OTLP endpoint.
+gem 'opentelemetry-sdk'
+gem 'opentelemetry-exporter-otlp'

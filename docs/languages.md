@@ -41,6 +41,8 @@ and run it under `rewynd run` (which points it at the core):
   ```bash
   rewynd run -- ruby app.rb
   ```
+  A runnable, verified example is in [`examples/ruby-service`](../examples/ruby-service/) — Ruby
+  records through the standard OTLP env vars with no rewynd-specific code.
 - **PHP** — the OpenTelemetry PHP extension + auto-instrumentation:
   ```bash
   rewynd run -- php -S localhost:8080
