@@ -1,0 +1,35 @@
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "rewynd"
+version = "0.1.0"
+description = "Capture shim for rewynd — zero-config OpenTelemetry export from your Python backend to the local rewynd core."
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "MIT" }
+authors = [{ name = "rewynd contributors" }]
+keywords = ["opentelemetry", "observability", "fastapi", "flask", "django", "debugging"]
+dependencies = [
+  "opentelemetry-distro",
+  "opentelemetry-exporter-otlp-proto-http",
+  "opentelemetry-instrumentation-fastapi",
+  "opentelemetry-instrumentation-flask",
+  "opentelemetry-instrumentation-django",
+  "opentelemetry-instrumentation-psycopg2",
+  "opentelemetry-instrumentation-sqlalchemy",
+  "opentelemetry-instrumentation-requests",
+  "opentelemetry-instrumentation-httpx",
+  "opentelemetry-instrumentation-logging",
+]
+
+[project.urls]
+Homepage = "https://github.com/SrinjoyDev/rewynd"
+
+[project.scripts]
+rewynd-run = "rewynd.launcher:main"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rewynd*"]

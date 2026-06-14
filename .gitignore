@@ -19,6 +19,11 @@ dist/
 # embedded postgres data dir (example app fallback)
 .pgdata/
 
+# python
+.venv/
+__pycache__/
+*.pyc
+
 # OS / editor
 .DS_Store
 *.log

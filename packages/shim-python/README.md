@@ -1,0 +1,20 @@
+# rewynd — Python capture shim
+
+Zero-config OpenTelemetry capture for Python backends, exporting to the local
+[rewynd](https://github.com/SrinjoyDev/rewynd) core. Same recorder, same TUI/CLI/MCP — for Python.
+
+```bash
+pip install rewynd
+
+rewynd-run uvicorn app:app               # FastAPI / Starlette
+rewynd-run flask --app app run           # Flask
+rewynd-run gunicorn app:app              # WSGI
+rewynd-run python manage.py runserver    # Django
+```
+
+Then in another terminal: `rewynd tui` (or `rewynd ls` / `rewynd watch`). It captures HTTP
+requests, DB queries (psycopg2 / SQLAlchemy), outbound calls (requests / httpx), and
+trace-correlated logs — with N+1 and slow-query detection, exactly like the Node shim.
+
+`rewynd-run` wraps OpenTelemetry's auto-instrumentation and points it at the core
+(`http://localhost:4318`). It refuses to start under `ENV=production` unless `REWYND_FORCE=1`.

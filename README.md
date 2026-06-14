@@ -17,9 +17,9 @@ happened. No `console.log`, no re-running.
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
 
-> 🚧 **Early development.** The core, the **TUI**, the CLI, the agent loop, and the **MCP
-> server** all work today. Next: request-body capture, more frameworks, npm distribution.
-> Stars and feedback welcome.
+> 🚧 **Early development.** The core, the **TUI**, the CLI, the agent loop, the **MCP
+> server**, and **Node + Python** capture all work today. Next: request-body capture and
+> package publishing (npm + PyPI). Stars and feedback welcome.
 
 ---
 
@@ -133,6 +133,18 @@ The shim stands on OpenTelemetry's auto-instrumentation (you never see OTel conf
 core is a single static binary: OTLP receiver → correlation → detections → embedded SQLite,
 with the TUI, CLI, and MCP as thin clients over it.
 
+## Supported stacks
+
+**Node.js** — Express, Fastify, NestJS (anything on Node's `http`); `pg`, `mysql2`, Drizzle,
+Sequelize, Knex; `fetch` / axios; `console`, `pino`, `winston`. One command:
+`rewynd run <your dev command>`.
+
+**Python** — FastAPI, Flask, Django; `psycopg2`, SQLAlchemy; `requests`, `httpx`; stdlib
+`logging`. One command: `pip install rewynd && rewynd-run <your command>`.
+
+Both feed the **same** core over OTLP, so the TUI, CLI, and MCP work identically across
+languages. Adding a language is a thin shim, never a core rewrite.
+
 ## Roadmap
 
 - [x] Zero-config capture + per-request correlation (Node, ESM/`tsx`)
@@ -140,8 +152,11 @@ with the TUI, CLI, and MCP as thin clients over it.
 - [x] CLI + the agent `watch` loop, `rewynd run` launcher
 - [x] MCP server (`rewynd mcp`) + `mcp.json` quickstart
 - [x] The live TUI (request list + waterfall)
-- [ ] Request/response body capture + redaction
-- [ ] More frameworks (Fastify, Nest, Next), ORMs (Prisma, Drizzle), Python
+- [x] N+1, slow-query, and slow-request detection
+- [x] Header capture + redaction; outbound HTTP
+- [x] **Python** shim (FastAPI/Flask/Django) over the same core — the multi-language unlock
+- [ ] Request/response body capture
+- [ ] More examples (Nest, Next, Prisma); npm + PyPI publishing
 
 ## Contributing
 
