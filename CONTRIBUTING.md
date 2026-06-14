@@ -4,15 +4,19 @@ Thanks for your interest. rewynd is a pnpm + Go monorepo.
 
 ## Layout
 
-- `core/` — the single Go binary: OTLP receiver, correlation, SQLite store, detections, CLI
-  (and soon the TUI + MCP server).
+- `core/` — the single Go binary: OTLP receiver (HTTP + gRPC), correlation, SQLite store,
+  detections, and the CLI, TUI, and MCP server.
 - `packages/shim-node/` — `@rewynd/shim`, the OpenTelemetry capture shim that runs in your app.
-- `examples/express-postgres/` — demo + integration fixture with two planted bugs (an N+1 and a
-  contextual 500).
+- `packages/cli/` — `@rewynd/cli`, the npm wrapper that ships the platform binary.
+- `packages/shim-python/` — the Python shim (`rewynd-run`).
+- `sdk/go/` — the Go SDK (`rewynd.Start(ctx)`).
+- `examples/` — runnable demos: `express-postgres` (N+1 + a 500), `distributed`, `jobs`,
+  `go-service`, `ruby-service`.
+- `docs/` — `languages.md` (recording any OTel language) and the launch kit.
 
 ## Prerequisites
 
-- Go 1.22+ (the toolchain is auto-managed)
+- Go 1.25+ (the toolchain is auto-managed)
 - Node 18+ and pnpm 11+
 - A local Postgres for the example app:
 
@@ -41,7 +45,9 @@ DATABASE_URL=postgresql://rewynd:rewynd@localhost:5433/app \
 ## Tests
 
 ```bash
-go -C core test ./...
+go -C core test ./...      # the core: store, ingest, detect, mcp, tui, stats, cli, otlp
+go -C sdk/go build ./...   # the Go SDK
+pnpm install --frozen-lockfile
 ```
 
 ## Conventions

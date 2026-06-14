@@ -5,7 +5,7 @@
 <p align="center">
   <a href="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml"><img src="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
-  <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go 1.22+">
+  <img src="https://img.shields.io/badge/Go-1.25+-00ADD8?logo=go&logoColor=white" alt="Go 1.25+">
   <img src="https://img.shields.io/badge/Node-18+-339933?logo=node.js&logoColor=white" alt="Node 18+">
   <img src="https://img.shields.io/badge/PRs-welcome-brightgreen.svg" alt="PRs welcome">
 </p>
@@ -224,13 +224,15 @@ languages — one local recorder for every backend, human or agent.
 - [x] **Load view**: `rewynd stats` + `get_load_stats` + TUI `S` panel (throughput, p50/p95/p99, error rate, by endpoint)
 - [x] **Go SDK** (`sdk/go`) — `rewynd.Start(ctx)` + standard OTel instrumentation
 - [x] **Any OTel language** via `rewynd run` (Java/.NET/Ruby/PHP); **regression diff** (`stats --save`/`--baseline`)
-- [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
+- [x] **npm** published (`@rewynd/cli`) — `npm i -D @rewynd/cli`
+- [ ] **PyPI** publishing (`pip install rewynd`) — wired in the release workflow; needs the PyPI token
 - [ ] Zero-config shims that bundle the OTel agent for more languages (Ruby gem, Java helper)
 
 ## Contributing
 
-See [CONTRIBUTING.md](./CONTRIBUTING.md). The repo is a pnpm + Go monorepo:
-`core/` (Go), `packages/shim-node/` (the shim), `examples/express-postgres/` (demo + fixture).
+See [CONTRIBUTING.md](./CONTRIBUTING.md). The repo is a pnpm + Go monorepo: `core/` (the Go
+core + CLI/TUI/MCP), `packages/` (the Node shim + npm wrapper + Python shim), `sdk/go/` (the Go
+SDK), and `examples/` (express-postgres, distributed, jobs, go-service, ruby-service).
 
 ## License
 
