@@ -5,6 +5,8 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 
 ## [Unreleased]
 
+## [0.2.0] - 2026-06-14
+
 ### Added
 
 - Zero-config, OTLP-native request capture with per-request correlation for **Node**
@@ -62,4 +64,5 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   binary via `optionalDependencies`) and **PyPI**, plus a `curl | sh` installer and a
   tag-driven release workflow.
 
-[Unreleased]: https://github.com/SrinjoyDev/rewynd/commits/main
+[Unreleased]: https://github.com/SrinjoyDev/rewynd/compare/v0.2.0...HEAD
+[0.2.0]: https://github.com/SrinjoyDev/rewynd/releases/tag/v0.2.0
