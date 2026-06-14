@@ -9,8 +9,9 @@ happened. No `console.log`, no re-running.
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
 
-> 🚧 **Early development.** The core, the CLI, and the agent loop work today (see below). The
-> beautiful TUI and the MCP server are next. Stars and feedback welcome.
+> 🚧 **Early development.** The core, the **TUI**, the CLI, the agent loop, and the **MCP
+> server** all work today. Next: request-body capture, more frameworks, npm distribution.
+> Stars and feedback welcome.
 
 ---
 
@@ -33,8 +34,8 @@ npm i -D @rewynd/shim          # (publishing soon; build from source today — s
 rewynd run npm run dev
 
 # In another terminal:
-rewynd ls                      # every request, color-coded, with query counts and flags
-rewynd show <id>               # the full story of one request
+rewynd tui                     # the live dashboard — watch requests stream in, click the broken one
+rewynd ls                      # or list them; `rewynd show <id>` for one request's full story
 ```
 
 ```text
@@ -130,7 +131,7 @@ with the TUI, CLI, and MCP as thin clients over it.
 - [x] Go core: OTLP receiver, SQLite store, N+1 detection
 - [x] CLI + the agent `watch` loop, `rewynd run` launcher
 - [x] MCP server (`rewynd mcp`) + `mcp.json` quickstart
-- [ ] The beautiful TUI (live list + waterfall) — the hero
+- [x] The live TUI (request list + waterfall)
 - [ ] Request/response body capture + redaction
 - [ ] More frameworks (Fastify, Nest, Next), ORMs (Prisma, Drizzle), Python
 
