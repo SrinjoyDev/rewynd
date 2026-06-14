@@ -282,6 +282,16 @@ func (s *Store) GetRequest(idOrPrefix string) (*model.Request, error) {
 		return nil, err
 	}
 
+	var reqJSON, respJSON sql.NullString
+	if err := s.db.QueryRow("SELECT req_json, resp_json FROM requests WHERE id=?", id).Scan(&reqJSON, &respJSON); err == nil {
+		if reqJSON.String != "" {
+			_ = json.Unmarshal([]byte(reqJSON.String), &r.Request)
+		}
+		if respJSON.String != "" {
+			_ = json.Unmarshal([]byte(respJSON.String), &r.Response)
+		}
+	}
+
 	spanRows, err := s.db.Query("SELECT span_id,parent_span_id,trace_id,name,type,started_at,ended_at,duration_ms,status,attrs_json,db_system,db_statement,db_statement_norm,http_method,http_url,http_status_code FROM spans WHERE request_id=? ORDER BY started_at", id)
 	if err != nil {
 		return nil, err

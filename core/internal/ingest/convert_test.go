@@ -42,6 +42,19 @@ func TestClassify(t *testing.T) {
 	}
 }
 
+func TestParseHeaders(t *testing.T) {
+	m := parseHeaders(`{"content-type":"application/json","authorization":"«redacted»"}`)
+	if m["content-type"] != "application/json" {
+		t.Errorf("content-type = %q", m["content-type"])
+	}
+	if m["authorization"] != "«redacted»" {
+		t.Errorf("redacted value not preserved: %q", m["authorization"])
+	}
+	if parseHeaders("") != nil || parseHeaders("not json") != nil {
+		t.Error("empty/invalid input should yield nil")
+	}
+}
+
 func TestFirstAttrInt(t *testing.T) {
 	m := map[string]any{"a": float64(200), "b": "404", "c": int64(500)}
 	for k, want := range map[string]int{"a": 200, "b": 404, "c": 500} {

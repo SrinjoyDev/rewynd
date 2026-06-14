@@ -4,6 +4,7 @@ package ingest
 
 import (
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"regexp"
 	"strconv"
@@ -108,6 +109,22 @@ func firstAttrInt(m map[string]any, keys ...string) int {
 		}
 	}
 	return 0
+}
+
+// parseHeaders decodes the shim's already-redacted header JSON into a string map.
+func parseHeaders(s string) map[string]string {
+	if s == "" {
+		return nil
+	}
+	var raw map[string]any
+	if json.Unmarshal([]byte(s), &raw) != nil {
+		return nil
+	}
+	out := make(map[string]string, len(raw))
+	for k, v := range raw {
+		out[k] = fmt.Sprint(v)
+	}
+	return out
 }
 
 func hasHTTP(m map[string]any) bool {

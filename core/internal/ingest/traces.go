@@ -67,12 +67,19 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 			path = route
 		}
 		status := firstAttrInt(attrs, "http.status_code", "http.response.status_code")
-		b.Requests = append(b.Requests, model.Request{
+		req := model.Request{
 			ID: traceID, SchemaVersion: model.SchemaVersion, TraceID: traceID, Service: service,
 			Method: method, Path: path, Route: route, StatusCode: status,
 			StartedAt: started, EndedAt: ended, DurationMs: durationMs(started, ended),
 			Error: statusErr || status >= 500,
-		})
+		}
+		if h := parseHeaders(firstAttr(attrs, "rewynd.request.headers")); h != nil {
+			req.Request = &model.HTTPPayload{Headers: h}
+		}
+		if h := parseHeaders(firstAttr(attrs, "rewynd.response.headers")); h != nil {
+			req.Response = &model.HTTPPayload{Headers: h}
+		}
+		b.Requests = append(b.Requests, req)
 	}
 
 	for _, ev := range sp.Events {
