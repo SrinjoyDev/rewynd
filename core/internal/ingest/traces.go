@@ -73,8 +73,10 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 			StartedAt: started, EndedAt: ended, DurationMs: durationMs(started, ended),
 			Error: statusErr || status >= 500,
 		}
-		if h := parseHeaders(firstAttr(attrs, "rewynd.request.headers")); h != nil {
-			req.Request = &model.HTTPPayload{Headers: h}
+		reqHeaders := parseHeaders(firstAttr(attrs, "rewynd.request.headers"))
+		reqBody := firstAttr(attrs, "rewynd.request.body")
+		if reqHeaders != nil || reqBody != "" {
+			req.Request = &model.HTTPPayload{Headers: reqHeaders, Body: reqBody}
 		}
 		if h := parseHeaders(firstAttr(attrs, "rewynd.response.headers")); h != nil {
 			req.Response = &model.HTTPPayload{Headers: h}

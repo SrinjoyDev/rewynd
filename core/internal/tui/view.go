@@ -151,6 +151,10 @@ func (a app) renderDetail(w, h int) string {
 			lines = append(lines, " "+dimStyle.Render(k+": ")+truncate(r.Request.Headers[k], maxi(4, w-len(k)-4)))
 		}
 	}
+	if r.Request != nil && r.Request.Body != "" {
+		lines = append(lines, "", headStyle.Render(" REQUEST BODY"))
+		lines = append(lines, " "+truncate(oneLine(r.Request.Body), w-2))
+	}
 	if len(lines) > h {
 		lines = lines[:h]
 	}

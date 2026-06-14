@@ -42,6 +42,36 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
     return out;
   };
 
+  // Body capture is read-only and post-parse (res.req.body), so it never interferes with the
+  // app's own body reading. Secrets are redacted; large bodies are size-capped.
+  const BODY_REDACT = new Set([
+    ...REDACT, 'password', 'pwd', 'token', 'secret', 'api_key', 'apikey', 'access_token', 'refresh_token',
+  ]);
+  const redactBody = (v, depth = 0) => {
+    if (v == null || depth > 6) return v;
+    if (Array.isArray(v)) return v.map((x) => redactBody(x, depth + 1));
+    if (typeof v === 'object') {
+      const out = {};
+      for (const [k, val] of Object.entries(v)) {
+        out[k] = BODY_REDACT.has(k.toLowerCase()) ? '«redacted»' : redactBody(val, depth + 1);
+      }
+      return out;
+    }
+    return v;
+  };
+  const captureBody = (body) => {
+    if (body == null) return undefined;
+    if (typeof body === 'object' && !Array.isArray(body) && Object.keys(body).length === 0) return undefined;
+    let s;
+    try {
+      s = JSON.stringify(redactBody(body));
+    } catch {
+      return undefined;
+    }
+    const cap = 16 * 1024;
+    return s.length > cap ? s.slice(0, cap) + '…[truncated]' : s;
+  };
+
   // Exporters default to http://localhost:4318 — the core's OTLP endpoint. Zero config.
   const sdk = new NodeSDK({
     serviceName: process.env.REWYND_SERVICE ?? process.env.npm_package_name ?? 'app',
@@ -62,6 +92,12 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
             try {
               const h = typeof res?.getHeaders === 'function' ? res.getHeaders() : res?.headers;
               if (h) span.setAttribute('rewynd.response.headers', JSON.stringify(redactHeaders(h)));
+            } catch {}
+          },
+          applyCustomAttributesOnSpan: (span, request) => {
+            try {
+              const body = captureBody(request?.body); // parsed by the time the span ends
+              if (body) span.setAttribute('rewynd.request.body', body);
             } catch {}
           },
         },

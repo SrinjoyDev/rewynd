@@ -464,6 +464,10 @@ func printRequestDetail(r *model.Request) {
 			fmt.Printf("  %s: %s\n", k, oneLine(r.Request.Headers[k]))
 		}
 	}
+	if r.Request != nil && r.Request.Body != "" {
+		fmt.Println("\nREQUEST BODY")
+		fmt.Printf("  %s\n", oneLine(r.Request.Body))
+	}
 	if len(r.Detections) > 0 {
 		fmt.Println("\nDETECTIONS")
 		for _, d := range r.Detections {
