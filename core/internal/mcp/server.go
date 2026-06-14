@@ -100,8 +100,8 @@ func (h *handlers) waitForRequest(ctx context.Context, _ *sdk.CallToolRequest, i
 }
 
 type diagOutput struct {
-	RequestID  string        `json:"request_id"`
-	StatusCode int           `json:"status_code"`
+	RequestID  string         `json:"request_id"`
+	StatusCode int            `json:"status_code"`
 	Problems   []diag.Problem `json:"problems"`
 }
 

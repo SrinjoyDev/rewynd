@@ -15,8 +15,8 @@ import (
 )
 
 type Store struct {
-	db   *sql.DB
-	wmu  sync.Mutex // serialize writes; WAL handles concurrent reads
+	db  *sql.DB
+	wmu sync.Mutex // serialize writes; WAL handles concurrent reads
 }
 
 // Batch is one OTLP export decoded into rows. Requests carry only the http_server-derived

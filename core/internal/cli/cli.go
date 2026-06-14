@@ -22,6 +22,7 @@ import (
 	"github.com/rewyndhq/rewynd/internal/mcp"
 	"github.com/rewyndhq/rewynd/internal/model"
 	"github.com/rewyndhq/rewynd/internal/store"
+	"github.com/rewyndhq/rewynd/internal/tui"
 )
 
 func Execute(version string) error {
@@ -38,6 +39,7 @@ func newRoot(version string) *cobra.Command {
 	root.AddCommand(
 		versionCmd(version),
 		runCmd(),
+		tuiCmd(),
 		serveCmd(),
 		statusCmd(),
 		lsCmd(),
@@ -348,6 +350,21 @@ func tailCmd() *cobra.Command {
 	addListFlags(cmd)
 	cmd.Flags().Bool("json", false, "machine-readable output")
 	return cmd
+}
+
+func tuiCmd() *cobra.Command {
+	return &cobra.Command{
+		Use:   "tui",
+		Short: "Launch the live terminal UI",
+		RunE: func(_ *cobra.Command, _ []string) error {
+			st, err := openStore()
+			if err != nil {
+				return err
+			}
+			defer st.Close()
+			return tui.Run(st)
+		},
+	}
 }
 
 func mcpCmd(version string) *cobra.Command {

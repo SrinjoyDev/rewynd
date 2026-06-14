@@ -91,14 +91,14 @@ type Span struct {
 
 // Query is a DB span enriched for the Queries tab + N+1 detection.
 type Query struct {
-	SpanID             string  `json:"span_id"`
-	RequestID          string  `json:"request_id"`
-	DBSystem           string  `json:"db_system,omitempty"`
-	Statement          string  `json:"statement"`
-	StatementNormalized string `json:"statement_normalized"` // params stripped — N+1 group key
-	DurationMs         float64 `json:"duration_ms"`
-	StartedAt          int64   `json:"started_at"`
-	Error              bool    `json:"error,omitempty"`
+	SpanID              string  `json:"span_id"`
+	RequestID           string  `json:"request_id"`
+	DBSystem            string  `json:"db_system,omitempty"`
+	Statement           string  `json:"statement"`
+	StatementNormalized string  `json:"statement_normalized"` // params stripped — N+1 group key
+	DurationMs          float64 `json:"duration_ms"`
+	StartedAt           int64   `json:"started_at"`
+	Error               bool    `json:"error,omitempty"`
 }
 
 // Outbound is an outbound HTTP-client span.
