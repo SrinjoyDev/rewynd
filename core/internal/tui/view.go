@@ -207,8 +207,8 @@ func waterfall(r *model.Request, w int) []string {
 
 func helpBox() string {
 	keys := [][2]string{
-		{"j / ↓", "move down"},
-		{"k / ↑", "move up"},
+		{"j, down", "move down"},
+		{"k, up", "move up"},
 		{"g / G", "jump to top / bottom"},
 		{"f", "cycle status filter (2xx/4xx/5xx)"},
 		{"e", "jump to the next error"},

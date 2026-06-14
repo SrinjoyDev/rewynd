@@ -30,8 +30,6 @@ jobs:
 
       # npm: per-platform binary packages + the `rewynd` wrapper + `@rewynd/shim`.
       - uses: pnpm/action-setup@v4
-        with:
-          version: 11
       - uses: actions/setup-node@v4
         with:
           node-version: 22

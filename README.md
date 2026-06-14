@@ -17,7 +17,7 @@ happened. No `console.log`, no re-running.
   <img src="demo/tui.gif" alt="rewynd TUI — live requests with the N+1 waterfall" width="100%">
 </p>
 
-<p align="center"><sub>↑ the human view: click the broken request, see its whole story &nbsp;·&nbsp; ↓ the same recording, driven by your coding agent</sub></p>
+<p align="center"><sub>Above: the human view — click the broken request, see its whole story. Below: the same recording, driven by your coding agent.</sub></p>
 
 <p align="center">
   <img src="demo/agent-loop.gif" alt="rewynd agent loop — clear, trigger, watch, diagnose" width="100%">
@@ -27,7 +27,7 @@ happened. No `console.log`, no re-running.
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
 
-> 🚧 **Early development.** The core, the **TUI**, the CLI, the agent loop, the **MCP
+> **Early development.** The core, the **TUI**, the CLI, the agent loop, the **MCP
 > server**, and **Node + Python** capture all work today. Next: request-body capture and
 > package publishing (npm + PyPI). Stars and feedback welcome.
 

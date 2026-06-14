@@ -17,12 +17,10 @@ case "$os" in
   *) echo "rewynd: unsupported OS: $os (Windows: download from the releases page)" >&2; exit 1 ;;
 esac
 
-tag=$(curl -fsSL "https://api.github.com/repos/$REPO/releases/latest" | grep -m1 '"tag_name"' | cut -d'"' -f4)
-if [ -z "$tag" ]; then echo "rewynd: could not find the latest release" >&2; exit 1; fi
-ver=${tag#v}
-url="https://github.com/$REPO/releases/download/${tag}/rewynd_${ver}_${os}_${arch}.tar.gz"
+# Use the latest-release redirect (no GitHub API, so no rate limits).
+url="https://github.com/$REPO/releases/latest/download/rewynd_${os}_${arch}.tar.gz"
 
-echo "rewynd: downloading ${tag} (${os}/${arch})…"
+echo "rewynd: downloading the latest release (${os}/${arch})..."
 tmp=$(mktemp -d)
 curl -fsSL "$url" | tar -xz -C "$tmp"
 

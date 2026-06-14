@@ -37,7 +37,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
     const out = {};
     for (const [k, v] of Object.entries(h ?? {})) {
       const key = k.toLowerCase();
-      out[key] = REDACT.has(key) ? '«redacted»' : Array.isArray(v) ? v.join(', ') : String(v);
+      out[key] = REDACT.has(key) ? '[redacted]' : Array.isArray(v) ? v.join(', ') : String(v);
     }
     return out;
   };
@@ -53,7 +53,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
     if (typeof v === 'object') {
       const out = {};
       for (const [k, val] of Object.entries(v)) {
-        out[k] = BODY_REDACT.has(k.toLowerCase()) ? '«redacted»' : redactBody(val, depth + 1);
+        out[k] = BODY_REDACT.has(k.toLowerCase()) ? '[redacted]' : redactBody(val, depth + 1);
       }
       return out;
     }
@@ -69,7 +69,7 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
       return undefined;
     }
     const cap = 16 * 1024;
-    return s.length > cap ? s.slice(0, cap) + '…[truncated]' : s;
+    return s.length > cap ? s.slice(0, cap) + '...[truncated]' : s;
   };
 
   // Exporters default to http://localhost:4318 — the core's OTLP endpoint. Zero config.

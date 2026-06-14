@@ -38,7 +38,7 @@ func Diagnose(r *model.Request) []Problem {
 func oneLine(s string) string {
 	s = strings.Join(strings.Fields(s), " ")
 	if len(s) > 120 {
-		return s[:120] + "…"
+		return s[:120] + "..."
 	}
 	return s
 }

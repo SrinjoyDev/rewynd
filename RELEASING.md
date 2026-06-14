@@ -18,7 +18,7 @@ The [Release workflow](.github/workflows/release.yml) then:
    `@rewynd/shim`, to **npm**.
 3. The Python `rewynd` package is built and published to **PyPI**.
 
-## Required secrets (repo → Settings → Secrets → Actions)
+## Required secrets (repo -> Settings -> Secrets -> Actions)
 
 | Secret | Used for |
 |---|---|

@@ -115,7 +115,7 @@ func SlowRequest(reqID string, durationMs, thresholdMs float64) []model.Detectio
 
 func truncate(s string, n int) string {
 	if len(s) > n {
-		return s[:n] + "…"
+		return s[:n] + "..."
 	}
 	return s
 }

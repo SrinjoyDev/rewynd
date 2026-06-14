@@ -7,7 +7,7 @@ set -e
 here=$(cd "$(dirname "$0")" && pwd)
 app="$here/../examples/express-postgres"
 
-echo "starting the example app under rewynd…"
+echo "starting the example app under rewynd..."
 ( cd "$app" && DATABASE_URL="postgresql://rewynd:rewynd@localhost:5433/app" \
     rewynd run -- node_modules/.bin/tsx src/server.ts >/tmp/rewynd-demo-app.log 2>&1 & )
 
@@ -18,7 +18,7 @@ for _ in $(seq 1 60); do
 done
 
 rewynd clear
-echo "firing sample requests…"
+echo "firing sample requests..."
 curl -s localhost:3000/api/feed >/dev/null
 curl -s localhost:3000/api/users >/dev/null      # the N+1
 curl -s localhost:3000/api/users >/dev/null

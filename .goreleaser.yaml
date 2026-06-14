@@ -20,7 +20,8 @@ builds:
 
 archives:
   - id: rewynd
-    name_template: "rewynd_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    # Version-less so `releases/latest/download/rewynd_<os>_<arch>.tar.gz` works (no API call).
+    name_template: "rewynd_{{ .Os }}_{{ .Arch }}"
     format_overrides:
       - goos: windows
         formats: [zip]

@@ -257,9 +257,9 @@ func diagnoseCmd() *cobra.Command {
 			}
 			fmt.Println("problems:")
 			for _, p := range problems {
-				fmt.Printf("  • %s\n", p.Summary)
+				fmt.Printf("  - %s\n", p.Summary)
 				if p.Suggestion != "" {
-					fmt.Printf("    ↳ %s\n", p.Suggestion)
+					fmt.Printf("    -> %s\n", p.Suggestion)
 				}
 			}
 			return nil
@@ -533,7 +533,7 @@ func dur(ms float64) string {
 func oneLine(s string) string {
 	s = strings.Join(strings.Fields(s), " ")
 	if len(s) > 100 {
-		return s[:100] + "…"
+		return s[:100] + "..."
 	}
 	return s
 }
