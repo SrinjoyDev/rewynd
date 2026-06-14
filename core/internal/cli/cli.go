@@ -71,14 +71,19 @@ func serveCmd() *cobra.Command {
 			ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 			defer stop()
 			addr, _ := cmd.Flags().GetString("addr")
+			grpcAddr, _ := cmd.Flags().GetString("grpc-addr")
 			if addr == "" {
 				addr = config.DefaultOTLPAddr
 			}
-			fmt.Fprintf(os.Stderr, "rewynd core listening on %s (OTLP/HTTP) — db %s\n", addr, config.DBPath())
-			return daemon.Run(ctx, daemon.Options{Addr: addr})
+			if grpcAddr == "" {
+				grpcAddr = config.DefaultOTLPGRPCAddr
+			}
+			fmt.Fprintf(os.Stderr, "rewynd core listening on %s (OTLP/HTTP) and %s (OTLP/gRPC) — db %s\n", addr, grpcAddr, config.DBPath())
+			return daemon.Run(ctx, daemon.Options{Addr: addr, GRPCAddr: grpcAddr})
 		},
 	}
-	cmd.Flags().String("addr", "", "OTLP listen address (default "+config.DefaultOTLPAddr+")")
+	cmd.Flags().String("addr", "", "OTLP/HTTP listen address (default "+config.DefaultOTLPAddr+")")
+	cmd.Flags().String("grpc-addr", "", "OTLP/gRPC listen address (default "+config.DefaultOTLPGRPCAddr+")")
 	return cmd
 }
 

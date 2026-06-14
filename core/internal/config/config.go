@@ -8,8 +8,9 @@ import (
 )
 
 const (
-	DefaultOTLPAddr    = "127.0.0.1:4318"
-	DefaultMaxRequests = 1000
+	DefaultOTLPAddr     = "127.0.0.1:4318" // OTLP/HTTP
+	DefaultOTLPGRPCAddr = "127.0.0.1:4317" // OTLP/gRPC (the SDK default)
+	DefaultMaxRequests  = 1000
 )
 
 // MaxRequests is the ring-buffer ceiling: how many recent requests to retain before pruning.
