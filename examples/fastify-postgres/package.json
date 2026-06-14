@@ -1,0 +1,21 @@
+{
+  "name": "@rewynd/example-fastify-postgres",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Fastify + Postgres example — same zero-config rewynd shim, a different framework, no core changes.",
+  "scripts": {
+    "dev": "tsx src/server.ts"
+  },
+  "dependencies": {
+    "fastify": "^5.0.0",
+    "pg": "^8.13.1"
+  },
+  "devDependencies": {
+    "@rewynd/shim": "workspace:*",
+    "@types/node": "^22.10.2",
+    "@types/pg": "^8.11.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.2"
+  }
+}

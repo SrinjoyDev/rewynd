@@ -62,4 +62,8 @@ func TestFirstAttrInt(t *testing.T) {
 			t.Errorf("firstAttrInt(%q) = %d, want %d", k, got, want)
 		}
 	}
+	st := map[string]any{"http.status_code": 0, "http.response.status_code": float64(200)}
+	if got := firstAttrInt(st, "http.status_code", "http.response.status_code"); got != 200 {
+		t.Errorf("zero should fall through to next key, got %d", got)
+	}
 }

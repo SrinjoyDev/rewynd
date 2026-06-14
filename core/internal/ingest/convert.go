@@ -89,23 +89,34 @@ func firstAttr(m map[string]any, keys ...string) string {
 	return ""
 }
 
+// firstAttrInt returns the first present, non-zero integer among keys. Zero is treated as
+// unset (no valid HTTP status is 0), so a stale http.status_code=0 falls through to the new
+// semconv http.response.status_code.
 func firstAttrInt(m map[string]any, keys ...string) int {
 	for _, k := range keys {
 		v, ok := m[k]
 		if !ok {
-			return 0
+			continue
 		}
-		switch n := v.(type) {
+		var n int
+		switch x := v.(type) {
 		case int:
-			return n
+			n = x
 		case int64:
-			return int(n)
+			n = int(x)
 		case float64:
-			return int(n)
+			n = int(x)
 		case string:
-			if i, err := strconv.Atoi(n); err == nil {
-				return i
+			i, err := strconv.Atoi(x)
+			if err != nil {
+				continue
 			}
+			n = i
+		default:
+			continue
+		}
+		if n != 0 {
+			return n
 		}
 	}
 	return 0
