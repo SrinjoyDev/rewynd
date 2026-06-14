@@ -192,10 +192,13 @@ standard OpenTelemetry instrumentation (`otelhttp`, `otelsql`). Go has no runtim
 auto-instrumentation, so it's minimal setup rather than zero — but it feeds the same core. See
 [`sdk/go`](./sdk/go/) and [`examples/go-service`](./examples/go-service/).
 
+**Any other language** — Java, .NET, Ruby, PHP, Rust, … — works through its standard
+OpenTelemetry auto-instrumentation. `rewynd run -- <your command>` sets the OTLP environment
+variables, so e.g. `rewynd run -- java -javaagent:opentelemetry-javaagent.jar -jar app.jar`
+records a JVM app with no code change. See **[docs/languages.md](./docs/languages.md)**.
+
 They all feed the **same** core over OTLP, so the TUI, CLI, and MCP work identically across
-languages. Any other OpenTelemetry-emitting service (Java, Rust, Ruby, .NET) connects too by
-pointing its OTLP exporter at `127.0.0.1:4317`. Adding a first-class shim is thin, never a core
-rewrite.
+languages — one local recorder for every backend, human or agent.
 
 ## Roadmap
 

@@ -12,6 +12,11 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
 - **Go SDK** (`github.com/SrinjoyDev/rewynd/sdk/go`): `rewynd.Start(ctx)` wires a Go service's
   OpenTelemetry traces to the local core in one call (minimal setup, since Go has no runtime
   auto-instrumentation), with flush-on-exit and an off switch. See `examples/go-service/`.
+- **Any OpenTelemetry language**: `rewynd run` now sets the standard OTLP env vars for the
+  process it launches, so a Java agent, .NET / Ruby / PHP auto-instrumentation, or any
+  OTel-emitting service records to rewynd with no rewynd-specific code (e.g.
+  `rewynd run -- java -javaagent:opentelemetry-javaagent.jar -jar app.jar`). The Node shim is
+  now optional rather than required. See `docs/languages.md`.
 - Go core: OTLP/HTTP receiver, embedded SQLite ring-buffer store, and detections
   (N+1, slow query, slow request).
 - Three frontends over one core: a Bubble Tea **TUI**, a JSON **CLI**
