@@ -23,6 +23,25 @@ happened. No `console.log`, no re-running.
 
 ---
 
+## Install
+
+```bash
+# macOS / Linux — grab the binary:
+curl -fsSL https://raw.githubusercontent.com/SrinjoyDev/rewynd/main/scripts/install.sh | sh
+
+# …or via npm (the CLI + the Node capture shim, one package):
+npm i -D rewynd
+
+# …or Go:
+go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest
+
+# Python capture shim:
+pip install rewynd
+```
+
+Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases).
+Before the first tagged release, build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
+
 ## The problem
 
 Frontend devs have the Chrome DevTools network tab. Backend devs have `print`. When an
@@ -35,10 +54,8 @@ rewynd is the network tab for your backend — for humans **and** agents.
 ## Quick start
 
 ```bash
-# In your Node project (Express, Fastify, …):
-npm i -D @rewynd/shim          # (publishing soon; build from source today — see CONTRIBUTING)
-
-# Run your normal dev command through rewynd — it auto-starts the recorder:
+# In your Node project (Express, Fastify, …), after installing (see Install above):
+# run your normal dev command through rewynd — it auto-starts the recorder:
 rewynd run npm run dev
 
 # In another terminal:

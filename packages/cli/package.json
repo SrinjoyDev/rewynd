@@ -1,0 +1,22 @@
+{
+  "name": "rewynd",
+  "version": "0.1.0",
+  "description": "A zero-config, OTLP-native flight recorder for your backend — a beautiful TUI, a JSON CLI, and an MCP server your coding agent can drive.",
+  "keywords": ["opentelemetry", "observability", "tui", "cli", "mcp", "debugging", "devtools", "otlp"],
+  "license": "MIT",
+  "homepage": "https://github.com/SrinjoyDev/rewynd",
+  "repository": { "type": "git", "url": "git+https://github.com/SrinjoyDev/rewynd.git" },
+  "bin": { "rewynd": "bin/rewynd.cjs" },
+  "files": ["bin/"],
+  "dependencies": {
+    "@rewynd/shim": "workspace:*"
+  },
+  "optionalDependencies": {
+    "@rewynd/cli-linux-x64": "0.1.0",
+    "@rewynd/cli-linux-arm64": "0.1.0",
+    "@rewynd/cli-darwin-x64": "0.1.0",
+    "@rewynd/cli-darwin-arm64": "0.1.0",
+    "@rewynd/cli-win32-x64": "0.1.0",
+    "@rewynd/cli-win32-arm64": "0.1.0"
+  }
+}

@@ -27,6 +27,10 @@ __pycache__/
 build/
 dist/
 
+# release artifacts (goreleaser + generated npm platform packages)
+/dist/
+packages/cli-platforms/
+
 # OS / editor
 .DS_Store
 *.log

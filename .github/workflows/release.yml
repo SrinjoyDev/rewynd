@@ -1,0 +1,66 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: core/go.mod
+          cache-dependency-path: core/go.sum
+
+      # Cross-platform binaries + GitHub Release + checksums.
+      - uses: goreleaser/goreleaser-action@v6
+        with:
+          version: "~> v2"
+          args: release --clean
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      # npm: per-platform binary packages + the `rewynd` wrapper + `@rewynd/shim`.
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 11
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          registry-url: https://registry.npmjs.org
+
+      - name: Build npm platform packages
+        run: node scripts/release/build-npm.mjs "${GITHUB_REF_NAME}"
+
+      - name: Publish to npm
+        run: |
+          set -e
+          if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NPM_TOKEN not set — skipping npm publish"; exit 0; fi
+          for dir in packages/cli-platforms/*; do (cd "$dir" && npm publish --access public); done
+          (cd packages/shim-node && npm publish --access public)
+          (cd packages/cli && npm publish --access public)
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      # PyPI: the Python shim.
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Publish to PyPI
+        run: |
+          if [ -z "$TWINE_PASSWORD" ]; then echo "PYPI_TOKEN not set — skipping PyPI publish"; exit 0; fi
+          python -m pip install --quiet build twine
+          sed -i "s/^version = .*/version = \"${GITHUB_REF_NAME#v}\"/" packages/shim-python/pyproject.toml
+          python -m build packages/shim-python
+          python -m twine upload packages/shim-python/dist/*
+        env:
+          TWINE_USERNAME: __token__
+          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}

@@ -1,0 +1,50 @@
+version: 2
+project_name: rewynd
+
+before:
+  hooks:
+    - go -C core mod download
+
+builds:
+  - id: rewynd
+    dir: core
+    main: ./cmd/rewynd
+    binary: rewynd
+    env:
+      - CGO_ENABLED=0
+    goos: [linux, darwin, windows]
+    goarch: [amd64, arm64]
+    ldflags:
+      - -s -w -X main.version={{ .Version }}
+    mod_timestamp: "{{ .CommitTimestamp }}"
+
+archives:
+  - id: rewynd
+    name_template: "rewynd_{{ .Version }}_{{ .Os }}_{{ .Arch }}"
+    format_overrides:
+      - goos: windows
+        format: zip
+
+checksum:
+  name_template: checksums.txt
+
+snapshot:
+  version_template: "{{ incpatch .Version }}-snapshot"
+
+changelog:
+  sort: asc
+  use: github
+  filters:
+    exclude:
+      - "^docs:"
+      - "^chore:"
+      - "^test:"
+      - "Merge pull request"
+
+release:
+  github:
+    owner: SrinjoyDev
+    name: rewynd
+  draft: false
+  prerelease: auto
+  name_template: "rewynd {{ .Tag }}"
