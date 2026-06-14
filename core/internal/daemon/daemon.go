@@ -28,7 +28,7 @@ func (o *Options) withDefaults() {
 		o.DBPath = config.DBPath()
 	}
 	if o.MaxRequests == 0 {
-		o.MaxRequests = config.DefaultMaxRequests
+		o.MaxRequests = config.MaxRequests()
 	}
 }
 

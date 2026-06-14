@@ -222,7 +222,7 @@ func (h *handlers) getStats(_ context.Context, _ *sdk.CallToolRequest, _ emptyIn
 		return nil, statsOutput{}, err
 	}
 	// Sample the whole ring buffer for the breakdown; Count() above is the authoritative total.
-	reqs, err := h.st.ListRequests(store.ListOptions{Limit: config.DefaultMaxRequests})
+	reqs, err := h.st.ListRequests(store.ListOptions{Limit: config.MaxRequests()})
 	if err != nil {
 		return nil, statsOutput{}, err
 	}

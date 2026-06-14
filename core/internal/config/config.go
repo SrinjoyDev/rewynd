@@ -4,12 +4,25 @@ package config
 import (
 	"os"
 	"path/filepath"
+	"strconv"
 )
 
 const (
 	DefaultOTLPAddr    = "127.0.0.1:4318"
 	DefaultMaxRequests = 1000
 )
+
+// MaxRequests is the ring-buffer ceiling: how many recent requests to retain before pruning.
+// Defaults to 1000 (plenty for local dev); raise it via REWYND_MAX_REQUESTS for large projects
+// or long sessions that want to leave nothing behind.
+func MaxRequests() int {
+	if v := os.Getenv("REWYND_MAX_REQUESTS"); v != "" {
+		if n, err := strconv.Atoi(v); err == nil && n > 0 {
+			return n
+		}
+	}
+	return DefaultMaxRequests
+}
 
 func DataDir() string {
 	if d := os.Getenv("REWYND_HOME"); d != "" {

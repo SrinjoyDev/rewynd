@@ -166,6 +166,13 @@ The shim stands on OpenTelemetry's auto-instrumentation (you never see OTel conf
 core is a single static binary: OTLP receiver → correlation → detections → embedded SQLite,
 with the TUI, CLI, and MCP as thin clients over it.
 
+**It scales with your project.** Because correlation keys on the OpenTelemetry trace, this is
+not a single-app toy: run a whole polyglot stack locally — several Node and Python services,
+a worker, a gateway — all pointed at the one core, and each inbound request is recorded with
+everything it caused, across services, by trace id. The store is a WAL'd ring buffer that
+keeps the most recent requests (1000 by default); set `REWYND_MAX_REQUESTS` higher for a long
+session or a busy app that wants to leave nothing behind.
+
 ## Supported stacks
 
 **Node.js** — Express, Fastify, NestJS (anything on Node's `http`); `pg`, `mysql2`, Drizzle,
