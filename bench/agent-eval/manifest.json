@@ -1,0 +1,29 @@
+{
+  "description": "Backend-bug tasks for the rewynd agent benchmark. Each scenario is recorded as a real rewynd trace (see ../../core/cmd/eval-seed). An agent diagnoses the root cause WITH rewynd (it can inspect the trace) vs WITHOUT (only the source + application logs).",
+  "tasks": [
+    {
+      "id": "checkout-500",
+      "request": "POST /api/checkout returned 500",
+      "root_cause": "order.total is never computed, so the INSERT sends NULL into the NOT NULL `total` column — Postgres rejects it.",
+      "must_mention": ["total", "null"]
+    },
+    {
+      "id": "users-nplus1",
+      "request": "GET /api/users is slow (~940ms)",
+      "root_cause": "N+1 query: the handler runs one SELECT on posts per user in a loop (50+ identical queries).",
+      "must_mention_any": ["n+1", "n + 1", "per user", "per-user", "loop", "one query per"]
+    },
+    {
+      "id": "pay-502",
+      "request": "POST /api/pay returned 502",
+      "root_cause": "The outbound call to the payments provider (payments.acme.com/v1/charge) returned 500; the handler maps that to a 502.",
+      "must_mention_any": ["payment", "outbound", "upstream", "downstream", "provider", "500", "third-party", "third party"]
+    },
+    {
+      "id": "email-job",
+      "request": "An email.send background job failed (no HTTP request)",
+      "root_cause": "The email.send job threw SMTPConnectError: connection refused to smtp.mailer.internal:587.",
+      "must_mention_any": ["smtp", "connection refused", "mail", "587"]
+    }
+  ]
+}

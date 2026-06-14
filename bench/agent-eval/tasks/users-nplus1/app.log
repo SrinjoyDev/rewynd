@@ -1,0 +1,3 @@
+2026-06-14T10:01:10Z info  GET /api/users
+2026-06-14T10:01:10Z info  listing users
+2026-06-14T10:01:11Z info  GET /api/users 200 940ms

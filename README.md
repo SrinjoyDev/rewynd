@@ -130,6 +130,25 @@ MCP instructions on connect, so the agent knows *when* and *how* to use them.
 OpenCode, Codex, Cline, and Devin live in [`integrations/`](./integrations/) — drop the right
 file into your project and any agent learns the `clear → trigger → watch → read → fix` loop.
 
+## Does it actually help an agent? — a benchmark
+
+We measured it. Four realistic backend bugs; the **same** coding agent and the **same** prompt
+in both arms — the only difference is whether it can read the rewynd trace.
+
+<p align="center">
+  <img src="bench/agent-eval/chart.png" alt="Does rewynd help a coding agent find the bug? Without rewynd 3/4; with rewynd 4/4." width="100%">
+</p>
+
+The agent found the root cause in **4/4 bugs with rewynd vs 3/4 without** — and, more telling,
+was correct *and confident* **4/4 vs 2/4**. The miss was a silently-failing background job: with
+only the source and the logs the agent **confidently invented the wrong cause** (a job-type
+mismatch); with the recorded trace it read the actual `SMTPConnectError` and got it right.
+Without ground truth, agents don't just fail — they *hallucinate a fix.* rewynd replaces the
+guess with what actually happened.
+
+It's fully reproducible — the tasks, the OTLP seeder, and the grader live in
+[`bench/agent-eval/`](./bench/agent-eval/). Bring your own agent and add your own bugs.
+
 ## What it captures, correlated per flow
 
 | | |
@@ -228,6 +247,8 @@ languages — one local recorder for every backend, human or agent.
 - [x] **Go SDK** (`sdk/go`) — `rewynd.Start(ctx)` + standard OTel instrumentation
 - [x] **Any OTel language** via `rewynd run` (Java/.NET/Ruby/PHP); **regression diff** (`stats --save`/`--baseline`)
 - [x] **npm** (`@rewynd/cli`) and **PyPI** (`rewynd`) published — install paths all live
+- [x] **Shareable trace export**: `rewynd export <id>` → a self-contained HTML page for PRs/CI
+- [x] **Agent-value benchmark**: reproducible eval showing agents debug better with the trace ([`bench/agent-eval`](./bench/agent-eval/))
 - [ ] Zero-config shims that bundle the OTel agent for more languages (Ruby gem, Java helper)
 
 ## Contributing

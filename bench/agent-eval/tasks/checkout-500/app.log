@@ -1,0 +1,4 @@
+2026-06-14T10:00:01Z info  POST /api/checkout
+2026-06-14T10:00:01Z info  creating order
+2026-06-14T10:00:01Z error request failed
+2026-06-14T10:00:01Z info  POST /api/checkout 500 95ms

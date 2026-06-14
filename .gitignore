@@ -1,5 +1,6 @@
 # Go
 /core/rewynd
+/core/eval-seed
 /core/dist/
 *.test
 
@@ -34,6 +35,8 @@ packages/cli-platforms/
 # OS / editor
 .DS_Store
 *.log
+# benchmark fixtures, not runtime logs:
+!bench/agent-eval/tasks/*/app.log
 .idea/
 .vscode/
 
