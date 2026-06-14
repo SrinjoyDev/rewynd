@@ -99,6 +99,34 @@ func TestDetailScroll(t *testing.T) {
 	}
 }
 
+func TestDetailShowsServicesWhenDistributed(t *testing.T) {
+	r := model.Request{
+		ID: "tr01", TraceID: "tr01", Method: "GET", Path: "/checkout", StatusCode: 200, Service: "gateway",
+		Spans: []model.Span{
+			{Service: "gateway", Type: model.SpanHTTPServer},
+			{Service: "billing", Type: model.SpanDBQuery},
+		},
+		Queries:  []model.Query{{Statement: "INSERT INTO charges (x) VALUES ($1)", Service: "billing", DurationMs: 3}},
+		Outbound: []model.Outbound{{Method: "POST", URL: "http://billing/charge", StatusCode: 200, Service: "gateway"}},
+	}
+	a := app{width: 120, height: 60, reqs: []model.Request{r}, detail: &r}
+	out := strings.Join(a.detailLines(&r, 90), "\n")
+	for _, want := range []string{"services", "gateway", "billing", "[billing]"} {
+		if !strings.Contains(out, want) {
+			t.Errorf("distributed detail missing %q", want)
+		}
+	}
+
+	// Single-service requests stay clean — no service labels.
+	single := model.Request{ID: "s1", Method: "GET", Path: "/x", StatusCode: 200, Service: "app",
+		Spans:   []model.Span{{Service: "app", Type: model.SpanHTTPServer}},
+		Queries: []model.Query{{Statement: "SELECT 1", Service: "app", DurationMs: 1}}}
+	b := app{width: 120, height: 60, reqs: []model.Request{single}, detail: &single}
+	if strings.Contains(strings.Join(b.detailLines(&single, 90), "\n"), "[app]") {
+		t.Errorf("single-service detail should not show service tags")
+	}
+}
+
 func TestListOptsReflectsFilters(t *testing.T) {
 	o := app{filter: "5xx", search: "/api/users", slowOnly: true}.listOpts()
 	if o.StatusClass != "5xx" || o.PathLike != "/api/users" || !o.Slow {

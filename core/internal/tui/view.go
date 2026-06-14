@@ -178,6 +178,12 @@ func (a app) detailLines(r *model.Request, w int) []string {
 			dimStyle.Render(fmt.Sprintf("  %d · %s", r.StatusCode, durStr(r.DurationMs))))
 	lines = append(lines, dimStyle.Render(fmt.Sprintf(" trace %s · %dq %do %dl", short(r.TraceID), r.Counts.Queries, r.Counts.Outbound, r.Counts.Logs)))
 
+	svcs := distinctServices(r)
+	multi := len(svcs) > 1
+	if multi {
+		lines = append(lines, lipgloss.NewStyle().Foreground(cBlue).Render(" services ")+dimStyle.Render(truncate(strings.Join(svcs, " → "), w-11)))
+	}
+
 	if len(r.Detections) > 0 {
 		lines = append(lines, "", lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render(" DETECTIONS"))
 		for _, d := range r.Detections {
@@ -197,7 +203,7 @@ func (a app) detailLines(r *model.Request, w int) []string {
 			lines = append(lines, " "+lipgloss.NewStyle().Foreground(cRed).Render(truncate(oneLine(head), w-2)))
 		}
 	}
-	if wf := waterfall(r, w); len(wf) > 0 {
+	if wf := waterfall(r, w, multi); len(wf) > 0 {
 		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" WATERFALL (%d queries)", len(r.Queries))))
 		lines = append(lines, wf...)
 	}
@@ -205,8 +211,11 @@ func (a app) detailLines(r *model.Request, w int) []string {
 		lines = append(lines, "", headStyle.Render(fmt.Sprintf(" OUTBOUND (%d)", len(r.Outbound))))
 		for _, o := range r.Outbound {
 			status := lipgloss.NewStyle().Foreground(statusColor(o.StatusCode)).Render(fmt.Sprintf("%3d", o.StatusCode))
-			lines = append(lines, " "+status+" "+fmt.Sprintf("%-4s", o.Method)+" "+
-				truncate(o.URL, maxi(6, w-12))+" "+dimStyle.Render(durStr(o.DurationMs)))
+			line := " " + status + " " + fmt.Sprintf("%-4s", o.Method) + " " + truncate(o.URL, maxi(6, w-12)) + " " + dimStyle.Render(durStr(o.DurationMs))
+			if multi && o.Service != "" {
+				line += " " + svcTag(o.Service)
+			}
+			lines = append(lines, line)
 		}
 	}
 	if len(r.Logs) > 0 {
@@ -254,8 +263,9 @@ func bodyLines(body string, w int) []string {
 }
 
 // waterfall renders each query as a positioned, duration-scaled bar — repeated identical
-// queries stack into an obvious staircase (the N+1).
-func waterfall(r *model.Request, w int) []string {
+// queries stack into an obvious staircase (the N+1). When the request spans services, each
+// query is tagged with the one that issued it.
+func waterfall(r *model.Request, w int, multi bool) []string {
 	if len(r.Queries) == 0 {
 		return nil
 	}
@@ -289,9 +299,30 @@ func waterfall(r *model.Request, w int) []string {
 			ln = maxi(1, barW-off)
 		}
 		bar := strings.Repeat(" ", off) + lipgloss.NewStyle().Foreground(cBlue).Render(strings.Repeat("▇", ln))
-		out = append(out, fmt.Sprintf(" %-*s %s %s", labelW, truncate(queryLabel(q.Statement), labelW), bar, dimStyle.Render(durStr(q.DurationMs))))
+		dur := durStr(q.DurationMs)
+		if multi && q.Service != "" {
+			dur += " " + svcTag(q.Service)
+		}
+		out = append(out, fmt.Sprintf(" %-*s %s %s", labelW, truncate(queryLabel(q.Statement), labelW), bar, dimStyle.Render(dur)))
 	}
 	return out
+}
+
+// distinctServices lists the services that appear in a request's spans, entry-first by start time.
+func distinctServices(r *model.Request) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, sp := range r.Spans {
+		if sp.Service != "" && !seen[sp.Service] {
+			seen[sp.Service] = true
+			out = append(out, sp.Service)
+		}
+	}
+	return out
+}
+
+func svcTag(s string) string {
+	return lipgloss.NewStyle().Foreground(cBlue).Render("[" + s + "]")
 }
 
 func helpBox() string {

@@ -15,35 +15,44 @@ import (
 func DecodeLogs(req *collogspb.ExportLogsServiceRequest) store.Batch {
 	var b store.Batch
 	for _, rl := range req.ResourceLogs {
+		service := resourceService(rl.Resource)
 		for _, sl := range rl.ScopeLogs {
 			scope := ""
 			if sl.Scope != nil {
 				scope = sl.Scope.Name
 			}
 			for _, lr := range sl.LogRecords {
-				b.Logs = append(b.Logs, decodeLog(lr, scope))
+				b.Logs = append(b.Logs, decodeLog(lr, scope, service))
 			}
 		}
 	}
 	return b
 }
 
-func decodeLog(lr *logspb.LogRecord, scope string) model.Log {
+func decodeLog(lr *logspb.LogRecord, scope, service string) model.Log {
 	at := int64(lr.TimeUnixNano)
 	if at == 0 {
 		at = int64(lr.ObservedTimeUnixNano)
 	}
 	traceID := hexID(lr.TraceId)
+	attrs := attrsToMap(lr.Attributes)
+	if service != "" {
+		if attrs == nil {
+			attrs = map[string]any{}
+		}
+		attrs["service.name"] = service
+	}
 	return model.Log{
 		ID:         nextID("log"),
 		RequestID:  traceID, // empty => unattributed; we never guess a parent
+		Service:    service,
 		TraceID:    traceID,
 		SpanID:     hexID(lr.SpanId),
 		At:         at,
 		Level:      severityText(lr),
 		Message:    bodyString(lr.Body),
 		Source:     logSource(scope),
-		Attributes: attrsToMap(lr.Attributes),
+		Attributes: attrs,
 	}
 }
 

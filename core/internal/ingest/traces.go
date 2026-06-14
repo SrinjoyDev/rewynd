@@ -36,6 +36,11 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 	if attrs == nil {
 		attrs = map[string]any{}
 	}
+	// Carry the resource's service on the span so it survives in attrs_json; this is what makes
+	// a distributed trace (many services, one trace id) legible per service downstream.
+	if service != "" {
+		attrs["service.name"] = service
+	}
 	traceID := hexID(sp.TraceId)
 	spanID := hexID(sp.SpanId)
 	typ := classify(sp.Kind, attrs)
@@ -55,7 +60,7 @@ func decodeSpan(service string, sp *tracepb.Span, b *store.Batch) {
 	started, ended := int64(sp.StartTimeUnixNano), int64(sp.EndTimeUnixNano)
 	b.Spans = append(b.Spans, model.Span{
 		SpanID: spanID, RequestID: traceID, TraceID: traceID, ParentSpanID: hexID(sp.ParentSpanId),
-		Name: sp.Name, Type: typ, StartedAt: started, EndedAt: ended,
+		Service: service, Name: sp.Name, Type: typ, StartedAt: started, EndedAt: ended,
 		DurationMs: durationMs(started, ended), Status: statusString(sp.Status), Attributes: attrs,
 	})
 

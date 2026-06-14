@@ -158,20 +158,23 @@ Secrets are redacted; bodies are size-capped. Your request data never leaves you
 
 ```
 your app ─(stock OpenTelemetry, configured by the shim)→ OTLP ─→ rewynd core ─→ SQLite
-                                                                    │
+                                            (HTTP :4318 · gRPC :4317)  │
                                               TUI · CLI · MCP read the same recording
 ```
 
 The shim stands on OpenTelemetry's auto-instrumentation (you never see OTel config). The Go
-core is a single static binary: OTLP receiver → correlation → detections → embedded SQLite,
-with the TUI, CLI, and MCP as thin clients over it.
+core is a single static binary: OTLP receiver (HTTP **and** gRPC) → correlation → detections →
+embedded SQLite, with the TUI, CLI, and MCP as thin clients over it. Any OTel-emitting
+service connects — gRPC is what most SDKs default to.
 
 **It scales with your project.** Because correlation keys on the OpenTelemetry trace, this is
-not a single-app toy: run a whole polyglot stack locally — several Node and Python services,
-a worker, a gateway — all pointed at the one core, and each inbound request is recorded with
-everything it caused, across services, by trace id. The store is a WAL'd ring buffer that
-keeps the most recent requests (1000 by default); set `REWYND_MAX_REQUESTS` higher for a long
-session or a busy app that wants to leave nothing behind.
+not a single-app toy: run a whole polyglot stack locally — several Node and Python services, a
+worker, a gateway — all pointed at the one core. A request that fans out across services is
+**stitched back into one trace**: the entry service is the root, and every query, outbound
+call, and log is tagged with the service it ran in, so you see the whole distributed flow in
+one view. The store is a WAL'd ring buffer that keeps the most recent requests (1000 by
+default); set `REWYND_MAX_REQUESTS` higher for a long session or a busy app that wants to
+leave nothing behind.
 
 ## Supported stacks
 
@@ -199,8 +202,10 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] **v0.1.0** released: cross-platform binaries + `curl | sh` installer + `go install`
 - [x] **Agent-native**: MCP instructions + `get_stats`; drop-in [integrations](./integrations/) for Claude Code, Cursor, Windsurf, OpenCode, Codex, Cline, Devin
 - [x] TUI control panel: live search, slow filter, scrollable enriched detail
+- [x] **OTLP/gRPC** intake (:4317) alongside HTTP — most SDKs default to gRPC
+- [x] **Distributed traces**: multi-service stitching with per-service attribution
 - [ ] `npm` + `PyPI` publishing (wired in the release workflow; needs registry token secrets)
-- [ ] More examples (Nest, Next, Prisma); gRPC OTLP intake; optional trace export
+- [ ] More examples (Nest, Next, Prisma); optional trace export
 
 ## Contributing
 

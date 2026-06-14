@@ -64,13 +64,19 @@ func (s *Store) WriteBatch(b Batch) error {
 	defer tx.Rollback()
 
 	for _, r := range b.Requests {
+		// One trace id can carry several server spans (a distributed call: gateway -> service).
+		// They share this row's id (the trace id), so keep the earliest-starting one — the entry
+		// service — as the canonical root, regardless of which export arrives last.
 		if _, err := tx.Exec(`
 			INSERT INTO requests (id,trace_id,service,method,path,route,status_code,started_at,ended_at,duration_ms,error,req_json,resp_json)
 			VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?)
 			ON CONFLICT(id) DO UPDATE SET
-			  method=excluded.method, path=excluded.path, route=excluded.route,
+			  service=excluded.service, method=excluded.method, path=excluded.path, route=excluded.route,
 			  status_code=excluded.status_code, started_at=excluded.started_at,
-			  ended_at=excluded.ended_at, duration_ms=excluded.duration_ms, error=excluded.error`,
+			  ended_at=excluded.ended_at, duration_ms=excluded.duration_ms, error=excluded.error,
+			  req_json=COALESCE(excluded.req_json, requests.req_json),
+			  resp_json=COALESCE(excluded.resp_json, requests.resp_json)
+			WHERE excluded.started_at <= requests.started_at`,
 			r.ID, r.TraceID, r.Service, r.Method, r.Path, r.Route, r.StatusCode,
 			r.StartedAt, r.EndedAt, r.DurationMs, boolToInt(r.Error),
 			jsonOrNil(r.Request), jsonOrNil(r.Response),
@@ -309,17 +315,18 @@ func (s *Store) GetRequest(idOrPrefix string) (*model.Request, error) {
 		}
 		sp.RequestID = id
 		sp.Attributes = unmarshalAttrs(attrs.String)
+		sp.Service = attrService(sp.Attributes)
 		r.Spans = append(r.Spans, sp)
 		switch sp.Type {
 		case model.SpanDBQuery:
 			r.Queries = append(r.Queries, model.Query{
-				SpanID: sp.SpanID, RequestID: id, DBSystem: dbSys.String,
+				SpanID: sp.SpanID, RequestID: id, Service: sp.Service, DBSystem: dbSys.String,
 				Statement: dbStmt.String, StatementNormalized: dbNorm.String,
 				DurationMs: sp.DurationMs, StartedAt: sp.StartedAt, Error: sp.Status == "error",
 			})
 		case model.SpanHTTPClient:
 			r.Outbound = append(r.Outbound, model.Outbound{
-				SpanID: sp.SpanID, RequestID: id, Method: hMethod.String, URL: hURL.String,
+				SpanID: sp.SpanID, RequestID: id, Service: sp.Service, Method: hMethod.String, URL: hURL.String,
 				StatusCode: int(hStatus.Int64), DurationMs: sp.DurationMs, StartedAt: sp.StartedAt,
 				Error: sp.Status == "error",
 			})
@@ -357,6 +364,7 @@ func (s *Store) loadLogs(r *model.Request, id string) error {
 		}
 		l.RequestID = id
 		l.Attributes = unmarshalAttrs(attrs.String)
+		l.Service = attrService(l.Attributes)
 		r.Logs = append(r.Logs, l)
 	}
 	return rows.Err()
@@ -515,6 +523,14 @@ func unmarshalAttrs(s string) map[string]any {
 		return nil
 	}
 	return m
+}
+
+// attrService pulls the OTel resource service the ingester stamped onto a span/log's attributes.
+func attrService(m map[string]any) string {
+	if s, ok := m["service.name"].(string); ok {
+		return s
+	}
+	return ""
 }
 
 func jsonOrNil(v any) any {

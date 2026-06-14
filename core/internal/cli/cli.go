@@ -458,6 +458,11 @@ func printRequestTable(reqs []model.Request) {
 func printRequestDetail(r *model.Request) {
 	fmt.Printf("%s %s  ->  %d  (%s)\n", r.Method, r.Path, r.StatusCode, dur(r.DurationMs))
 	fmt.Printf("id %s   trace %s\n", shortID(r.ID), r.TraceID)
+	svcs := requestServices(r)
+	multi := len(svcs) > 1
+	if multi {
+		fmt.Printf("services %s\n", strings.Join(svcs, " -> "))
+	}
 	if r.Request != nil && len(r.Request.Headers) > 0 {
 		fmt.Println("\nREQUEST HEADERS")
 		keys := make([]string, 0, len(r.Request.Headers))
@@ -482,13 +487,13 @@ func printRequestDetail(r *model.Request) {
 	if len(r.Queries) > 0 {
 		fmt.Printf("\nQUERIES (%d)\n", len(r.Queries))
 		for _, q := range r.Queries {
-			fmt.Printf("  %7s  %s\n", dur(q.DurationMs), oneLine(q.Statement))
+			fmt.Printf("  %7s  %s%s\n", dur(q.DurationMs), oneLine(q.Statement), svcSuffix(q.Service, multi))
 		}
 	}
 	if len(r.Outbound) > 0 {
 		fmt.Printf("\nOUTBOUND (%d)\n", len(r.Outbound))
 		for _, o := range r.Outbound {
-			fmt.Printf("  %7s  %s %s -> %d\n", dur(o.DurationMs), o.Method, o.URL, o.StatusCode)
+			fmt.Printf("  %7s  %s %s -> %d%s\n", dur(o.DurationMs), o.Method, o.URL, o.StatusCode, svcSuffix(o.Service, multi))
 		}
 	}
 	if len(r.Logs) > 0 {
@@ -503,6 +508,26 @@ func printRequestDetail(r *model.Request) {
 			fmt.Printf("  %s: %s\n", e.Type, oneLine(e.Message))
 		}
 	}
+}
+
+// requestServices lists the services in a request's spans, entry-first (spans are start-ordered).
+func requestServices(r *model.Request) []string {
+	seen := map[string]bool{}
+	var out []string
+	for _, sp := range r.Spans {
+		if sp.Service != "" && !seen[sp.Service] {
+			seen[sp.Service] = true
+			out = append(out, sp.Service)
+		}
+	}
+	return out
+}
+
+func svcSuffix(service string, multi bool) string {
+	if multi && service != "" {
+		return "  [" + service + "]"
+	}
+	return ""
 }
 
 func flags(r model.Request) string {

@@ -80,6 +80,7 @@ type Span struct {
 	ParentSpanID string         `json:"parent_span_id,omitempty"`
 	TraceID      string         `json:"trace_id"`
 	RequestID    string         `json:"request_id"`
+	Service      string         `json:"service,omitempty"` // the service this span ran in
 	Name         string         `json:"name"`
 	Type         SpanType       `json:"type"`
 	StartedAt    int64          `json:"started_at"`
@@ -93,6 +94,7 @@ type Span struct {
 type Query struct {
 	SpanID              string  `json:"span_id"`
 	RequestID           string  `json:"request_id"`
+	Service             string  `json:"service,omitempty"` // which service issued it (distributed traces)
 	DBSystem            string  `json:"db_system,omitempty"`
 	Statement           string  `json:"statement"`
 	StatementNormalized string  `json:"statement_normalized"` // params stripped — N+1 group key
@@ -105,6 +107,7 @@ type Query struct {
 type Outbound struct {
 	SpanID     string  `json:"span_id"`
 	RequestID  string  `json:"request_id"`
+	Service    string  `json:"service,omitempty"` // which service made the call
 	Method     string  `json:"method,omitempty"`
 	URL        string  `json:"url"`
 	StatusCode int     `json:"status_code,omitempty"`
@@ -117,6 +120,7 @@ type Outbound struct {
 type Log struct {
 	ID         string         `json:"id"`
 	RequestID  string         `json:"request_id,omitempty"`
+	Service    string         `json:"service,omitempty"` // emitting service (distributed traces)
 	TraceID    string         `json:"trace_id,omitempty"`
 	SpanID     string         `json:"span_id,omitempty"`
 	At         int64          `json:"at"` // unix nanoseconds
