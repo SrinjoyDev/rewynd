@@ -107,7 +107,11 @@ if (process.env.NODE_ENV === 'production' && process.env.REWYND_FORCE !== '1') {
   });
   sdk.start();
 
-  const shutdown = () => sdk.shutdown().finally(() => process.exit(0));
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+  // Flush exactly once, whether we're killed (long-running server) or the event loop drains
+  // on its own (a short-lived worker, script, or job — which must not lose its spans).
+  let flushing;
+  const flush = () => (flushing ??= sdk.shutdown());
+  process.on('SIGTERM', () => flush().finally(() => process.exit(0)));
+  process.on('SIGINT', () => flush().finally(() => process.exit(0)));
+  process.on('beforeExit', () => flush());
 }
