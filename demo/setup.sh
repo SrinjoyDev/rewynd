@@ -19,9 +19,12 @@ done
 
 rewynd clear
 echo "firing sample requests..."
-curl -s localhost:3000/api/feed >/dev/null
-curl -s localhost:3000/api/users >/dev/null      # the N+1
-curl -s localhost:3000/api/users >/dev/null
+for _ in $(seq 6); do
+  curl -s localhost:3000/api/feed >/dev/null
+  curl -s localhost:3000/api/users >/dev/null    # the N+1
+done
 curl -s -XPOST localhost:3000/api/orders -H 'content-type: application/json' -d '{"userId":1,"note":"ship it"}' >/dev/null  # the 500
+# let the async OTLP export flush before recording (so ls/show/stats see everything)
+rewynd watch --path /api/users --json >/dev/null 2>&1 || true
 
 echo "ready. Now record:  vhs demo/tui.tape   and   vhs demo/agent-loop.tape"
