@@ -1,0 +1,91 @@
+<!doctype html>
+<!-- Source for demo/banner.png. Render: google-chrome --headless --screenshot --window-size=1280,320 -->
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 1280px; height: 320px; }
+  body {
+    font-family: 'Inter', system-ui, sans-serif;
+    background: #11111b;
+    overflow: hidden;
+    position: relative;
+  }
+  .bg {
+    position: absolute; inset: 0;
+    background:
+      radial-gradient(120% 140% at 8% -10%, rgba(203,166,247,0.20) 0%, rgba(137,180,250,0.06) 38%, rgba(17,17,27,0) 62%),
+      radial-gradient(100% 120% at 100% 120%, rgba(116,199,236,0.14) 0%, rgba(17,17,27,0) 55%),
+      linear-gradient(135deg, #181825 0%, #1e1e2e 55%, #181825 100%);
+  }
+  /* per-request waterfall motif on the free right side — staggered like a real trace timeline */
+  .waterfall { position: absolute; right: 72px; top: 50%; transform: translateY(-50%); width: 380px; opacity: 0.85; }
+  .row { height: 10px; border-radius: 5px; margin-top: 15px; }
+  .grid { position: absolute; inset: 0;
+    background-image: linear-gradient(rgba(205,214,244,0.035) 1px, transparent 1px);
+    background-size: 100% 34px; }
+
+  .badge {
+    position: absolute; left: 64px; top: 114px;
+    width: 92px; height: 92px; border-radius: 24px;
+    background: linear-gradient(150deg, #313146 0%, #1e1e2e 100%);
+    border: 1px solid rgba(203,166,247,0.35);
+    box-shadow: 0 0 0 1px rgba(17,17,27,0.6), 0 18px 50px -12px rgba(203,166,247,0.45);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .badge svg { width: 50px; height: 50px; }
+  .text { position: absolute; left: 190px; top: 73px; max-width: 760px; }
+
+  .wordmark {
+    font-weight: 800; font-size: 74px; letter-spacing: -2.5px; line-height: 1;
+    background: linear-gradient(92deg, #cba6f7 0%, #89b4fa 48%, #74c7ec 100%);
+    -webkit-background-clip: text; background-clip: text; color: transparent;
+  }
+  .tagline { margin-top: 14px; font-size: 24px; line-height: 1.2; font-weight: 600; color: #cdd6f4; letter-spacing: -0.3px; }
+  .sub { margin-top: 9px; font-size: 17px; line-height: 1.25; font-weight: 500; color: #7f849c; letter-spacing: 0.1px; }
+  .sub.accent { color: #a6adc8; margin-top: 4px; }
+
+  .rec { position: absolute; top: 30px; right: 34px; display: flex; align-items: center; gap: 9px;
+    font-family: 'DejaVu Sans Mono', monospace; font-size: 14px; font-weight: 700;
+    letter-spacing: 2px; color: #f38ba8; }
+  .dot { width: 11px; height: 11px; border-radius: 50%; background: #f38ba8;
+    box-shadow: 0 0 12px 2px rgba(243,139,168,0.7); }
+</style>
+</head>
+<body>
+  <div class="bg"></div>
+  <div class="grid"></div>
+
+  <div class="waterfall">
+    <div class="row" style="width: 58%; margin-left: 0%;  background: linear-gradient(90deg,#89b4fa,#74c7ec);"></div>
+    <div class="row" style="width: 30%; margin-left: 14%; background: linear-gradient(90deg,#a6e3a1,#94e2d5);"></div>
+    <div class="row" style="width: 22%; margin-left: 26%; background: linear-gradient(90deg,#a6e3a1,#94e2d5);"></div>
+    <div class="row" style="width: 46%; margin-left: 18%; background: linear-gradient(90deg,#cba6f7,#b4befe);"></div>
+    <div class="row" style="width: 18%; margin-left: 40%; background: linear-gradient(90deg,#f38ba8,#eba0ac);"></div>
+  </div>
+
+  <div class="rec"><span class="dot"></span>REC</div>
+
+  <div class="stage">
+    <div class="badge">
+      <!-- rewind glyph -->
+      <svg viewBox="0 0 24 24" fill="none">
+        <defs>
+          <linearGradient id="g" x1="0" y1="0" x2="24" y2="24" gradientUnits="userSpaceOnUse">
+            <stop stop-color="#cba6f7"/><stop offset="1" stop-color="#89b4fa"/>
+          </linearGradient>
+        </defs>
+        <path d="M11 5.5v13L2.5 12 11 5.5Z" fill="url(#g)"/>
+        <path d="M21 5.5v13L12.5 12 21 5.5Z" fill="url(#g)"/>
+      </svg>
+    </div>
+    <div class="text">
+      <div class="wordmark">rewynd</div>
+      <div class="tagline">The flight recorder for your backend.</div>
+      <div class="sub">Every request, query, and exception &mdash; correlated, local, zero-config.</div>
+      <div class="sub accent">For humans and the agents that debug alongside them.</div>
+    </div>
+  </div>
+</body>
+</html>

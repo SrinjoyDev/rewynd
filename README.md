@@ -1,6 +1,8 @@
-# rewynd
+<p align="center">
+  <img src="demo/banner.png" alt="rewynd — the flight recorder for your backend, for humans and the agents that debug with them" width="100%">
+</p>
 
-<p>
+<p align="center">
   <a href="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml"><img src="https://github.com/SrinjoyDev/rewynd/actions/workflows/ci.yml/badge.svg" alt="CI"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT License"></a>
   <img src="https://img.shields.io/badge/Go-1.22+-00ADD8?logo=go&logoColor=white" alt="Go 1.22+">
@@ -27,9 +29,9 @@ happened. No `console.log`, no re-running.
 > coding agent can actually drive. OpenTelemetry under the hood, zero config on top. Runs
 > entirely on your machine.
 
-> **Early development.** The core, the **TUI**, the CLI, the agent loop, the **MCP
-> server**, and **Node + Python** capture all work today. Next: request-body capture and
-> package publishing (npm + PyPI). Stars and feedback welcome.
+> **v0.1.0 is live.** The core, the **TUI**, the CLI, the agent loop, the **MCP server**,
+> **Node + Python** capture, and header/body recording all work today — install below. Stars
+> and feedback welcome.
 
 ---
 
@@ -49,8 +51,8 @@ go install github.com/SrinjoyDev/rewynd/core/cmd/rewynd@latest
 pip install rewynd
 ```
 
-Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases).
-Before the first tagged release, build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
+Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd/releases),
+or build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
 
 ## The problem
 
@@ -116,7 +118,13 @@ Drop this into your Claude Code / Cursor MCP config:
 }
 ```
 
-Tools: `list_requests`, `get_request`, `wait_for_request`, `diagnose`, `get_last_error`, `clear`.
+Tools: `get_stats`, `list_requests`, `get_request`, `wait_for_request`, `diagnose`,
+`get_last_error`, `clear`. The server also sends the whole debugging protocol as MCP
+instructions on connect, so the agent knows *when* and *how* to use them.
+
+**Ready-made integrations** for Claude Code (skill + MCP), Cursor (rules + MCP), Windsurf,
+OpenCode, Codex, Cline, and Devin live in [`integrations/`](./integrations/) — drop the right
+file into your project and any agent learns the `clear → trigger → watch → read → fix` loop.
 
 ## What it captures, correlated per request
 
@@ -182,8 +190,11 @@ languages. Adding a language is a thin shim, never a core rewrite.
 - [x] N+1, slow-query, and slow-request detection
 - [x] Header capture + redaction; outbound HTTP
 - [x] **Python** shim (FastAPI/Flask/Django) over the same core — the multi-language unlock
-- [ ] Request/response body capture
-- [ ] More examples (Nest, Next, Prisma); npm + PyPI publishing
+- [x] Request/response body capture (redacted, size-capped)
+- [x] **v0.1.0** released: cross-platform binaries, `npm` + `PyPI` packages, install script
+- [x] **Agent-native**: MCP instructions + `get_stats`; drop-in [integrations](./integrations/) for Claude Code, Cursor, Windsurf, OpenCode, Codex, Cline, Devin
+- [ ] TUI filtering + search; more examples (Nest, Next, Prisma)
+- [ ] gRPC OTLP intake; optional trace export
 
 ## Contributing
 
