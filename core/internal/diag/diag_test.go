@@ -37,6 +37,35 @@ func TestDiagnoseUsesTitleWhenSummaryEmpty(t *testing.T) {
 	}
 }
 
+func TestDiagnoseFailedOutbound(t *testing.T) {
+	// A 502 whose only cause is an upstream 500 — must not report "no problems".
+	r := &model.Request{
+		StatusCode: 502, Error: true,
+		Outbound: []model.Outbound{
+			{Method: "POST", URL: "https://payments.acme.com/v1/charge", StatusCode: 500, Error: true},
+			{Method: "GET", URL: "https://ok.acme.com/health", StatusCode: 200}, // healthy, ignored
+		},
+	}
+	ps := Diagnose(r)
+	if len(ps) != 1 {
+		t.Fatalf("expected 1 problem (the failed outbound), got %d: %+v", len(ps), ps)
+	}
+	if ps[0].Type != "outbound_error" || !strings.Contains(ps[0].Summary, "payments.acme.com") || !strings.Contains(ps[0].Summary, "500") {
+		t.Errorf("outbound problem wrong: %+v", ps[0])
+	}
+}
+
+func TestDiagnoseFailedQuery(t *testing.T) {
+	r := &model.Request{Queries: []model.Query{
+		{Statement: "UPDATE accounts SET balance = balance - 1 WHERE id = 7", Error: true},
+		{Statement: "SELECT 1", Error: false}, // healthy, ignored
+	}}
+	ps := Diagnose(r)
+	if len(ps) != 1 || ps[0].Type != "query_error" || !strings.Contains(ps[0].Summary, "UPDATE accounts") {
+		t.Errorf("expected one query_error problem, got %+v", ps)
+	}
+}
+
 func TestDiagnoseClean(t *testing.T) {
 	if ps := Diagnose(&model.Request{}); len(ps) != 0 {
 		t.Errorf("a clean request should have no problems, got %+v", ps)

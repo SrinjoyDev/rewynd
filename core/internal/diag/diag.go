@@ -3,6 +3,7 @@
 package diag
 
 import (
+	"strconv"
 	"strings"
 
 	"github.com/SrinjoyDev/rewynd/core/internal/model"
@@ -32,7 +33,44 @@ func Diagnose(r *model.Request) []Problem {
 		seen[key] = true
 		ps = append(ps, Problem{"exception", strings.TrimSpace(e.Type + ": " + oneLine(e.Message)), firstLine(e.Stack)})
 	}
+	// A failed outbound call is often the real cause of a 5xx the local code never threw.
+	for _, o := range r.Outbound {
+		if !o.Error && o.StatusCode < 400 {
+			continue
+		}
+		key := "out:" + o.Method + o.URL + strconv.Itoa(o.StatusCode)
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		ps = append(ps, Problem{"outbound_error", outboundSummary(o),
+			"The upstream call failed — the handler likely surfaced this as the request's error."})
+	}
+	// A DB query that errored but didn't surface as an exception.
+	for _, q := range r.Queries {
+		if !q.Error {
+			continue
+		}
+		key := "q:" + q.StatementNormalized
+		if seen[key] {
+			continue
+		}
+		seen[key] = true
+		ps = append(ps, Problem{"query_error", "query failed: " + oneLine(q.Statement), ""})
+	}
 	return ps
+}
+
+func outboundSummary(o model.Outbound) string {
+	m := o.Method
+	if m == "" {
+		m = "GET"
+	}
+	s := m + " " + o.URL
+	if o.StatusCode > 0 {
+		s += " -> " + strconv.Itoa(o.StatusCode)
+	}
+	return s
 }
 
 func oneLine(s string) string {
