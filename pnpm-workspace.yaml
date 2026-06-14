@@ -2,3 +2,15 @@ packages:
   - "packages/*"
   - "examples/*"
   - "bench"
+
+# Dependencies allowed to run install/build scripts (pnpm v11 blocks them by default and
+# reads this map from here). esbuild/protobufjs fetch their native bits; embedded-postgres
+# ships the example app's database.
+allowBuilds:
+  '@embedded-postgres/darwin-arm64': true
+  '@embedded-postgres/darwin-x64': true
+  '@embedded-postgres/linux-arm64': true
+  '@embedded-postgres/linux-x64': true
+  '@embedded-postgres/windows-x64': true
+  esbuild: true
+  protobufjs: true
