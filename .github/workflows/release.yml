@@ -55,9 +55,19 @@ jobs:
         run: |
           set -e
           if [ -z "$NODE_AUTH_TOKEN" ]; then echo "NPM_TOKEN not set — skipping npm publish"; exit 0; fi
-          for dir in packages/cli-platforms/*; do (cd "$dir" && npm publish --access public); done
-          (cd packages/shim-node && npm publish --access public)
-          (cd packages/cli && npm publish --access public)
+          # Idempotent: a re-run skips versions already on the registry, but still fails on a
+          # real error (so a partial publish can be safely re-run).
+          publish() {
+            if out=$(npm publish --access public 2>&1); then echo "$out"; return 0; fi
+            echo "$out"
+            if echo "$out" | grep -qiE "cannot publish over|previously published|EPUBLISHCONFLICT"; then
+              echo "↳ already published, skipping"; return 0
+            fi
+            return 1
+          }
+          for dir in packages/cli-platforms/*; do (cd "$dir" && publish); done
+          (cd packages/shim-node && publish)
+          (cd packages/cli && publish)
         env:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 

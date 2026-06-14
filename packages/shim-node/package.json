@@ -1,7 +1,6 @@
 {
   "name": "@rewynd/shim",
   "version": "0.0.0",
-  "private": true,
   "type": "module",
   "description": "rewynd capture shim — configures OpenTelemetry auto-instrumentation + log correlation and exports to the local rewynd core. Hides OTel entirely.",
   "exports": {
