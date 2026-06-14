@@ -18,6 +18,12 @@ importers:
         specifier: workspace:*
         version: link:../packages/shim-node
 
+  examples/distributed:
+    devDependencies:
+      '@rewynd/shim':
+        specifier: workspace:*
+        version: link:../../packages/shim-node
+
   examples/express-postgres:
     dependencies:
       express:

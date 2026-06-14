@@ -172,9 +172,9 @@ not a single-app toy: run a whole polyglot stack locally — several Node and Py
 worker, a gateway — all pointed at the one core. A request that fans out across services is
 **stitched back into one trace**: the entry service is the root, and every query, outbound
 call, and log is tagged with the service it ran in, so you see the whole distributed flow in
-one view. The store is a WAL'd ring buffer that keeps the most recent requests (1000 by
-default); set `REWYND_MAX_REQUESTS` higher for a long session or a busy app that wants to
-leave nothing behind.
+one view ([runnable example](./examples/distributed/)). The store is a WAL'd ring buffer that
+keeps the most recent requests (1000 by default); set `REWYND_MAX_REQUESTS` higher for a long
+session or a busy app that wants to leave nothing behind.
 
 ## Supported stacks
 

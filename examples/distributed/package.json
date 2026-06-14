@@ -1,0 +1,10 @@
+{
+  "name": "rewynd-example-distributed",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "description": "Two services (gateway -> billing) that rewynd stitches into one distributed trace.",
+  "devDependencies": {
+    "@rewynd/shim": "workspace:*"
+  }
+}

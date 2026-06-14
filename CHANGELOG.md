@@ -13,10 +13,23 @@ Format: [Keep a Changelog](https://keepachangelog.com/en/1.1.0/) · versioning: 
   (N+1, slow query, slow request).
 - Three frontends over one core: a Bubble Tea **TUI**, a JSON **CLI**
   (`run/tui/serve/ls/show/watch/tail/diagnose/last-error/clear/status`), and an **MCP
-  server** (`rewynd mcp`, 6 tools) for coding agents.
+  server** (`rewynd mcp`) for coding agents.
+- **OTLP/gRPC** intake on `:4317` alongside HTTP on `:4318` — most OpenTelemetry SDKs
+  default to gRPC; the gRPC listener is best-effort so a busy port never blocks the core.
+- **Distributed trace stitching**: a request that fans out across services is recorded as
+  one trace, the entry service is the canonical root (earliest server span, regardless of
+  export order), and every query / outbound / log is attributed to the service it ran in.
+  See `examples/distributed/`.
+- **Agent-native** integrations: connect-time MCP instructions, a `get_stats` orientation
+  tool, richer tool descriptions, and drop-in setups under `integrations/` for Claude Code,
+  Cursor, Windsurf, OpenCode, Codex, Cline, and Devin.
+- **TUI control panel**: live path search (`/`), slow-only filter (`s`), a scrollable
+  detail pane (`ctrl+d`/`ctrl+u`), and richer detail (detection suggestions, outbound,
+  response body), plus the `?` keybinding overlay.
 - One-command launchers: `rewynd run <cmd>` (Node) and `rewynd-run <cmd>` (Python); the
   core auto-starts on first use.
 - Request header + body capture with **in-app redaction**; outbound HTTP capture.
+- Configurable retention via `REWYND_MAX_REQUESTS` (default 1000).
 - Privacy: binds `127.0.0.1`, no telemetry, a hard production guard.
 - Distribution: cross-platform binaries (goreleaser), `rewynd` on **npm** (per-platform
   binary via `optionalDependencies`) and **PyPI**, plus a `curl | sh` installer and a
