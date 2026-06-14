@@ -506,6 +506,9 @@ func flags(r model.Request) string {
 			f = append(f, "N+1")
 		}
 	}
+	if r.DurationMs >= 1000 {
+		f = append(f, "slow")
+	}
 	return strings.Join(f, ",")
 }
 

@@ -234,10 +234,14 @@ func miniBar(d, max float64) string {
 }
 
 func rowFlags(r model.Request) string {
+	var s string
 	if hasNPlusOne(r) {
-		return " " + lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render("N+1")
+		s += " " + lipgloss.NewStyle().Foreground(cMauve).Bold(true).Render("N+1")
 	}
-	return ""
+	if r.DurationMs >= 1000 {
+		s += " " + lipgloss.NewStyle().Foreground(cYellow).Render("slow")
+	}
+	return s
 }
 
 func logLevel(level string) string {
