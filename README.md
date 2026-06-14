@@ -42,6 +42,9 @@ logs, and exceptions each one caused, **correlated per request**, during local d
 # npm (the CLI + the Node capture shim) — the command it installs is `rewynd`:
 npm i -D @rewynd/cli
 
+# …Python (the capture shim + `rewynd-run`):
+pip install rewynd
+
 # …or grab the binary directly (macOS / Linux):
 curl -fsSL https://raw.githubusercontent.com/SrinjoyDev/rewynd/main/scripts/install.sh | sh
 
@@ -53,8 +56,7 @@ Windows binaries are on the [releases page](https://github.com/SrinjoyDev/rewynd
 or build from source — see [CONTRIBUTING](./CONTRIBUTING.md).
 
 > The npm package is **`@rewynd/cli`** (npm reserves the bare `rewynd` name); the installed
-> command is still `rewynd`. **PyPI** (`pip install rewynd`) publishing is wired and turns on
-> once the PyPI token is configured.
+> command is still `rewynd`. Python is `pip install rewynd` then `rewynd-run <your command>`.
 
 ## The problem
 
@@ -224,8 +226,7 @@ languages — one local recorder for every backend, human or agent.
 - [x] **Load view**: `rewynd stats` + `get_load_stats` + TUI `S` panel (throughput, p50/p95/p99, error rate, by endpoint)
 - [x] **Go SDK** (`sdk/go`) — `rewynd.Start(ctx)` + standard OTel instrumentation
 - [x] **Any OTel language** via `rewynd run` (Java/.NET/Ruby/PHP); **regression diff** (`stats --save`/`--baseline`)
-- [x] **npm** published (`@rewynd/cli`) — `npm i -D @rewynd/cli`
-- [ ] **PyPI** publishing (`pip install rewynd`) — wired in the release workflow; needs the PyPI token
+- [x] **npm** (`@rewynd/cli`) and **PyPI** (`rewynd`) published — install paths all live
 - [ ] Zero-config shims that bundle the OTel agent for more languages (Ruby gem, Java helper)
 
 ## Contributing
